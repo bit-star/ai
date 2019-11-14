@@ -1,0 +1,53 @@
+<div class="row justify-content-center">
+    <div class="col-8">
+        <div *ngIf="ddMessage">
+            <h2><span jhiTranslate="aiApp.ddMessage.detail.title">Dd Message</span> {{ddMessage.id}}</h2>
+            <hr>
+            <jhi-alert-error></jhi-alert-error>
+            <dl class="row-md jh-entity-details">
+                <dt><span jhiTranslate="aiApp.ddMessage.receivingDepartment">Receiving Department</span></dt>
+                <dd>
+                    <span>{{ddMessage.receivingDepartment}}</span>
+                </dd>
+                <dt><span jhiTranslate="aiApp.ddMessage.receivingUser">Receiving User</span></dt>
+                <dd>
+                    <span>{{ddMessage.receivingUser}}</span>
+                </dd>
+                <dt><span jhiTranslate="aiApp.ddMessage.title">Title</span></dt>
+                <dd>
+                    <span>{{ddMessage.title}}</span>
+                </dd>
+                <dt><span jhiTranslate="aiApp.ddMessage.json">Json</span></dt>
+                <dd>
+                    <span>{{ddMessage.json}}</span>
+                </dd>
+                <dt><span jhiTranslate="aiApp.ddMessage.sendTime">Send Time</span></dt>
+                <dd>
+                    <span>{{ddMessage.sendTime}}</span>
+                </dd>
+                <dt><span jhiTranslate="aiApp.ddMessage.type">Type</span></dt>
+                <dd>
+                    <span jhiTranslate="{{'aiApp.DdMessageType.' + ddMessage.type}}">{{ddMessage.type}}</span>
+                </dd>
+                <dt><span jhiTranslate="aiApp.ddMessage.processMsgTask">Process Msg Task</span></dt>
+                <dd>
+                    <div *ngIf="ddMessage.processMsgTask">
+                        <a [routerLink]="['/process-msg-task-mp-ai', ddMessage.processMsgTask?.id, 'view']">{{ddMessage.processMsgTask?.id}}</a>
+                    </div>
+                </dd>
+            </dl>
+
+            <button type="submit"
+                    (click)="previousState()"
+                    class="btn btn-info">
+                <fa-icon [icon]="'arrow-left'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back"> Back</span>
+            </button>
+
+            <button type="button"
+                    [routerLink]="['/dd-message-mp-ai', ddMessage.id, 'edit']"
+                    class="btn btn-primary">
+                <fa-icon [icon]="'pencil-alt'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit"> Edit</span>
+            </button>
+        </div>
+    </div>
+</div>

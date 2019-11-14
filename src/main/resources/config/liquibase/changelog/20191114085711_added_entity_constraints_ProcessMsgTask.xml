@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+    <!--
+        Added the constraints for entity ProcessMsgTask.
+    -->
+    <changeSet id="20191114085711-2" author="jhipster">
+        
+        <addForeignKeyConstraint baseColumnNames="process_instance_id"
+                                 baseTableName="process_msg_task"
+                                 constraintName="fk_process_msg_task_process_instance_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="process_instance"/>
+
+    </changeSet>
+</databaseChangeLog>

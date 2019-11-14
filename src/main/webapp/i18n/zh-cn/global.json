@@ -7,6 +7,12 @@
       "jhipster-needle-menu-add-element": "JHipster will add additional menu entries here (do not translate!)",
       "entities": {
         "main": "数据",
+        "processTemplateMpAi": "Process Template",
+        "processInstanceEventMpAi": "Process Instance Event",
+        "processInstanceMpAi": "Process Instance",
+        "formComponentValuesMpAi": "Form Component Values",
+        "processMsgTaskMpAi": "Process Msg Task",
+        "ddMessageMpAi": "Dd Message",
         "jhipster-needle-menu-add-entry": "JHipster will add additional entities here (do not translate!)"
       },
       "account": {
