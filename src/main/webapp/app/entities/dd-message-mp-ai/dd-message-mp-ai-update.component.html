@@ -1,0 +1,67 @@
+<div class="row justify-content-center">
+    <div class="col-8">
+        <form name="editForm" role="form" novalidate (ngSubmit)="save()" [formGroup]="editForm">
+            <h2 id="jhi-dd-message-mp-ai-heading" jhiTranslate="aiApp.ddMessage.home.createOrEditLabel">Create or edit a Dd Message</h2>
+            <div>
+                <jhi-alert-error></jhi-alert-error>
+                <div class="form-group" [hidden]="!editForm.get('id').value">
+                    <label for="id" jhiTranslate="global.field.id">ID</label>
+                    <input type="text" class="form-control" id="id" name="id" formControlName="id"
+                        readonly />
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="aiApp.ddMessage.receivingDepartment" for="field_receivingDepartment">Receiving Department</label>
+                    <input type="text" class="form-control" name="receivingDepartment" id="field_receivingDepartment"
+                           formControlName="receivingDepartment"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="aiApp.ddMessage.receivingUser" for="field_receivingUser">Receiving User</label>
+                    <input type="text" class="form-control" name="receivingUser" id="field_receivingUser"
+                           formControlName="receivingUser"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="aiApp.ddMessage.title" for="field_title">Title</label>
+                    <input type="text" class="form-control" name="title" id="field_title"
+                           formControlName="title"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="aiApp.ddMessage.json" for="field_json">Json</label>
+                    <input type="text" class="form-control" name="json" id="field_json"
+                           formControlName="json"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="aiApp.ddMessage.sendTime" for="field_sendTime">Send Time</label>
+                    <div class="d-flex">
+                        <input id="field_sendTime" type="datetime-local" class="form-control" name="sendTime" formControlName="sendTime" placeholder="YYYY-MM-DD HH:mm"/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="aiApp.ddMessage.type" for="field_type">Type</label>
+                    <select class="form-control" name="type" formControlName="type" id="field_type">
+                        <option value="ActionCard">{{'aiApp.DdMessageType.ActionCard' | translate}}</option>
+                        <option value="Markdown">{{'aiApp.DdMessageType.Markdown' | translate}}</option>
+                        <option value="Oa">{{'aiApp.DdMessageType.Oa' | translate}}</option>
+                        <option value="Link">{{'aiApp.DdMessageType.Link' | translate}}</option>
+                        <option value="File">{{'aiApp.DdMessageType.File' | translate}}</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="aiApp.ddMessage.processMsgTask" for="field_processMsgTask">Process Msg Task</label>
+                    <select class="form-control" id="field_processMsgTask" name="processMsgTask" formControlName="processMsgTask">
+                        <option [ngValue]="null"></option>
+                        <option [ngValue]="processMsgTaskOption.id === editForm.get('processMsgTask').value?.id ? editForm.get('processMsgTask').value : processMsgTaskOption" *ngFor="let processMsgTaskOption of processmsgtasks; trackBy: trackProcessMsgTaskById">{{processMsgTaskOption.id}}</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <button type="button" id="cancel-save" class="btn btn-secondary"  (click)="previousState()">
+                    <fa-icon [icon]="'ban'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.cancel">Cancel</span>
+                </button>
+                <button type="submit" id="save-entity" [disabled]="editForm.invalid || isSaving" class="btn btn-primary">
+                    <fa-icon [icon]="'save'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.save">Save</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

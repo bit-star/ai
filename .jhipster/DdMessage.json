@@ -1,0 +1,50 @@
+{
+    "name": "DdMessage",
+    "fields": [
+        {
+            "fieldName": "receivingDepartment",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "receivingUser",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "title",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "json",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "sendTime",
+            "fieldType": "Instant"
+        },
+        {
+            "fieldName": "type",
+            "fieldType": "DdMessageType",
+            "fieldValues": "ActionCard,Markdown,Oa,Link,File"
+        }
+    ],
+    "relationships": [
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "processMsgTask",
+            "otherEntityRelationshipName": "ddMessage",
+            "relationshipName": "processMsgTask",
+            "otherEntityField": "id"
+        }
+    ],
+    "changelogDate": "20191114085712",
+    "entityTableName": "dd_message",
+    "dto": "no",
+    "pagination": "pagination",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "readOnly": false,
+    "clientRootFolder": "",
+    "applications": "*",
+    "angularJSSuffix": "mpAi"
+}

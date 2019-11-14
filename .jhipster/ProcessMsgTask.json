@@ -1,0 +1,56 @@
+{
+    "name": "ProcessMsgTask",
+    "fields": [
+        {
+            "fieldName": "receivingDepartment",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "receivingUser",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "title",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "json",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "executeTime",
+            "fieldType": "Instant"
+        },
+        {
+            "fieldName": "status",
+            "fieldType": "MessageStatus",
+            "fieldValues": "SentSuccessfully,NotSentYet"
+        }
+    ],
+    "relationships": [
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "ddMessage",
+            "otherEntityRelationshipName": "processMsgTask",
+            "relationshipName": "ddMessage"
+        },
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "processInstance",
+            "otherEntityRelationshipName": "processMsgTask",
+            "relationshipName": "processInstance",
+            "otherEntityField": "id"
+        }
+    ],
+    "changelogDate": "20191114085711",
+    "entityTableName": "process_msg_task",
+    "dto": "no",
+    "pagination": "pagination",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "readOnly": false,
+    "clientRootFolder": "",
+    "applications": "*",
+    "angularJSSuffix": "mpAi"
+}
