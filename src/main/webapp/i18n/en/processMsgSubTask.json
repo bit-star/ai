@@ -1,0 +1,24 @@
+{
+  "aiApp": {
+    "processMsgSubTask": {
+      "home": {
+        "title": "Process Msg Sub Tasks",
+        "createLabel": "Create a new Process Msg Sub Task",
+        "createOrEditLabel": "Create or edit a Process Msg Sub Task",
+        "notFound": "No Process Msg Sub Tasks found"
+      },
+      "created": "A new Process Msg Sub Task is created with identifier {{ param }}",
+      "updated": "A Process Msg Sub Task is updated with identifier {{ param }}",
+      "deleted": "A Process Msg Sub Task is deleted with identifier {{ param }}",
+      "delete": {
+        "question": "Are you sure you want to delete Process Msg Sub Task {{ id }}?"
+      },
+      "detail": {
+        "title": "Process Msg Sub Task"
+      },
+      "useridList": "Userid List",
+      "taskId": "Task Id",
+      "processMsgTask": "Process Msg Task"
+    }
+  }
+}

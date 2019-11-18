@@ -5,25 +5,33 @@
             <hr>
             <jhi-alert-error></jhi-alert-error>
             <dl class="row-md jh-entity-details">
-                <dt><span jhiTranslate="aiApp.processMsgTask.receivingDepartment">Receiving Department</span></dt>
+                <dt><span jhiTranslate="aiApp.processMsgTask.deptIdList">Dept Id List</span></dt>
                 <dd>
-                    <span>{{processMsgTask.receivingDepartment}}</span>
+                    <span>{{processMsgTask.deptIdList}}</span>
                 </dd>
-                <dt><span jhiTranslate="aiApp.processMsgTask.receivingUser">Receiving User</span></dt>
+                <dt><span jhiTranslate="aiApp.processMsgTask.useridList">Userid List</span></dt>
                 <dd>
-                    <span>{{processMsgTask.receivingUser}}</span>
+                    <span>{{processMsgTask.useridList}}</span>
                 </dd>
-                <dt><span jhiTranslate="aiApp.processMsgTask.title">Title</span></dt>
+                <dt><span jhiTranslate="aiApp.processMsgTask.toAllUser">To All User</span></dt>
                 <dd>
-                    <span>{{processMsgTask.title}}</span>
+                    <span>{{processMsgTask.toAllUser}}</span>
                 </dd>
-                <dt><span jhiTranslate="aiApp.processMsgTask.json">Json</span></dt>
+                <dt><span jhiTranslate="aiApp.processMsgTask.msg">Msg</span></dt>
                 <dd>
-                    <span>{{processMsgTask.json}}</span>
+                    <span>{{processMsgTask.msg}}</span>
                 </dd>
                 <dt><span jhiTranslate="aiApp.processMsgTask.executeTime">Execute Time</span></dt>
                 <dd>
                     <span>{{processMsgTask.executeTime}}</span>
+                </dd>
+                <dt><span jhiTranslate="aiApp.processMsgTask.agentId">Agent Id</span></dt>
+                <dd>
+                    <span>{{processMsgTask.agentId}}</span>
+                </dd>
+                <dt><span jhiTranslate="aiApp.processMsgTask.type">Type</span></dt>
+                <dd>
+                    <span jhiTranslate="{{'aiApp.DdMessageType.' + processMsgTask.type}}">{{processMsgTask.type}}</span>
                 </dd>
                 <dt><span jhiTranslate="aiApp.processMsgTask.status">Status</span></dt>
                 <dd>

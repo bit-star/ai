@@ -2,19 +2,19 @@
     "name": "ProcessMsgTask",
     "fields": [
         {
-            "fieldName": "receivingDepartment",
+            "fieldName": "deptIdList",
             "fieldType": "String"
         },
         {
-            "fieldName": "receivingUser",
+            "fieldName": "useridList",
             "fieldType": "String"
         },
         {
-            "fieldName": "title",
-            "fieldType": "String"
+            "fieldName": "toAllUser",
+            "fieldType": "Boolean"
         },
         {
-            "fieldName": "json",
+            "fieldName": "msg",
             "fieldType": "String"
         },
         {
@@ -22,17 +22,26 @@
             "fieldType": "Instant"
         },
         {
+            "fieldName": "agentId",
+            "fieldType": "Long"
+        },
+        {
+            "fieldName": "type",
+            "fieldType": "DdMessageType",
+            "fieldValues": "Voice,ActionCard,Markdown,Oa,Link,File,Text,Image"
+        },
+        {
             "fieldName": "status",
             "fieldType": "MessageStatus",
-            "fieldValues": "SentSuccessfully,NotSentYet"
+            "fieldValues": "SentSuccessfully,Sending,NotSentYet"
         }
     ],
     "relationships": [
         {
             "relationshipType": "one-to-many",
-            "otherEntityName": "ddMessage",
+            "otherEntityName": "processMsgSubTask",
             "otherEntityRelationshipName": "processMsgTask",
-            "relationshipName": "ddMessage"
+            "relationshipName": "processMsgSubTask"
         },
         {
             "relationshipType": "many-to-one",
