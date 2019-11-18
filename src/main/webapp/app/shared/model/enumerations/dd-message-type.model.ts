@@ -1,7 +1,10 @@
 export const enum DdMessageType {
+  Voice = 'Voice',
   ActionCard = 'ActionCard',
   Markdown = 'Markdown',
   Oa = 'Oa',
   Link = 'Link',
-  File = 'File'
+  File = 'File',
+  Text = 'Text',
+  Image = 'Image'
 }

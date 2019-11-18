@@ -10,6 +10,8 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.lazulite.ai.domain.enumeration.DdMessageType;
+
 import com.lazulite.ai.domain.enumeration.MessageStatus;
 
 /**
@@ -26,20 +28,27 @@ public class ProcessMsgTask implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "receiving_department")
-    private String receivingDepartment;
+    @Column(name = "dept_id_list")
+    private String deptIdList;
 
-    @Column(name = "receiving_user")
-    private String receivingUser;
+    @Column(name = "userid_list")
+    private String useridList;
 
-    @Column(name = "title")
-    private String title;
+    @Column(name = "to_all_user")
+    private Boolean toAllUser;
 
-    @Column(name = "json")
-    private String json;
+    @Column(name = "msg")
+    private String msg;
 
     @Column(name = "execute_time")
     private Instant executeTime;
+
+    @Column(name = "agent_id")
+    private Long agentId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
+    private DdMessageType type;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
@@ -47,7 +56,7 @@ public class ProcessMsgTask implements Serializable {
 
     @OneToMany(mappedBy = "processMsgTask")
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    private Set<DdMessage> ddMessages = new HashSet<>();
+    private Set<ProcessMsgSubTask> processMsgSubTasks = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties("processMsgTasks")
@@ -62,56 +71,56 @@ public class ProcessMsgTask implements Serializable {
         this.id = id;
     }
 
-    public String getReceivingDepartment() {
-        return receivingDepartment;
+    public String getDeptIdList() {
+        return deptIdList;
     }
 
-    public ProcessMsgTask receivingDepartment(String receivingDepartment) {
-        this.receivingDepartment = receivingDepartment;
+    public ProcessMsgTask deptIdList(String deptIdList) {
+        this.deptIdList = deptIdList;
         return this;
     }
 
-    public void setReceivingDepartment(String receivingDepartment) {
-        this.receivingDepartment = receivingDepartment;
+    public void setDeptIdList(String deptIdList) {
+        this.deptIdList = deptIdList;
     }
 
-    public String getReceivingUser() {
-        return receivingUser;
+    public String getUseridList() {
+        return useridList;
     }
 
-    public ProcessMsgTask receivingUser(String receivingUser) {
-        this.receivingUser = receivingUser;
+    public ProcessMsgTask useridList(String useridList) {
+        this.useridList = useridList;
         return this;
     }
 
-    public void setReceivingUser(String receivingUser) {
-        this.receivingUser = receivingUser;
+    public void setUseridList(String useridList) {
+        this.useridList = useridList;
     }
 
-    public String getTitle() {
-        return title;
+    public Boolean isToAllUser() {
+        return toAllUser;
     }
 
-    public ProcessMsgTask title(String title) {
-        this.title = title;
+    public ProcessMsgTask toAllUser(Boolean toAllUser) {
+        this.toAllUser = toAllUser;
         return this;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setToAllUser(Boolean toAllUser) {
+        this.toAllUser = toAllUser;
     }
 
-    public String getJson() {
-        return json;
+    public String getMsg() {
+        return msg;
     }
 
-    public ProcessMsgTask json(String json) {
-        this.json = json;
+    public ProcessMsgTask msg(String msg) {
+        this.msg = msg;
         return this;
     }
 
-    public void setJson(String json) {
-        this.json = json;
+    public void setMsg(String msg) {
+        this.msg = msg;
     }
 
     public Instant getExecuteTime() {
@@ -127,6 +136,32 @@ public class ProcessMsgTask implements Serializable {
         this.executeTime = executeTime;
     }
 
+    public Long getAgentId() {
+        return agentId;
+    }
+
+    public ProcessMsgTask agentId(Long agentId) {
+        this.agentId = agentId;
+        return this;
+    }
+
+    public void setAgentId(Long agentId) {
+        this.agentId = agentId;
+    }
+
+    public DdMessageType getType() {
+        return type;
+    }
+
+    public ProcessMsgTask type(DdMessageType type) {
+        this.type = type;
+        return this;
+    }
+
+    public void setType(DdMessageType type) {
+        this.type = type;
+    }
+
     public MessageStatus getStatus() {
         return status;
     }
@@ -140,29 +175,29 @@ public class ProcessMsgTask implements Serializable {
         this.status = status;
     }
 
-    public Set<DdMessage> getDdMessages() {
-        return ddMessages;
+    public Set<ProcessMsgSubTask> getProcessMsgSubTasks() {
+        return processMsgSubTasks;
     }
 
-    public ProcessMsgTask ddMessages(Set<DdMessage> ddMessages) {
-        this.ddMessages = ddMessages;
+    public ProcessMsgTask processMsgSubTasks(Set<ProcessMsgSubTask> processMsgSubTasks) {
+        this.processMsgSubTasks = processMsgSubTasks;
         return this;
     }
 
-    public ProcessMsgTask addDdMessage(DdMessage ddMessage) {
-        this.ddMessages.add(ddMessage);
-        ddMessage.setProcessMsgTask(this);
+    public ProcessMsgTask addProcessMsgSubTask(ProcessMsgSubTask processMsgSubTask) {
+        this.processMsgSubTasks.add(processMsgSubTask);
+        processMsgSubTask.setProcessMsgTask(this);
         return this;
     }
 
-    public ProcessMsgTask removeDdMessage(DdMessage ddMessage) {
-        this.ddMessages.remove(ddMessage);
-        ddMessage.setProcessMsgTask(null);
+    public ProcessMsgTask removeProcessMsgSubTask(ProcessMsgSubTask processMsgSubTask) {
+        this.processMsgSubTasks.remove(processMsgSubTask);
+        processMsgSubTask.setProcessMsgTask(null);
         return this;
     }
 
-    public void setDdMessages(Set<DdMessage> ddMessages) {
-        this.ddMessages = ddMessages;
+    public void setProcessMsgSubTasks(Set<ProcessMsgSubTask> processMsgSubTasks) {
+        this.processMsgSubTasks = processMsgSubTasks;
     }
 
     public ProcessInstance getProcessInstance() {
@@ -199,11 +234,13 @@ public class ProcessMsgTask implements Serializable {
     public String toString() {
         return "ProcessMsgTask{" +
             "id=" + getId() +
-            ", receivingDepartment='" + getReceivingDepartment() + "'" +
-            ", receivingUser='" + getReceivingUser() + "'" +
-            ", title='" + getTitle() + "'" +
-            ", json='" + getJson() + "'" +
+            ", deptIdList='" + getDeptIdList() + "'" +
+            ", useridList='" + getUseridList() + "'" +
+            ", toAllUser='" + isToAllUser() + "'" +
+            ", msg='" + getMsg() + "'" +
             ", executeTime='" + getExecuteTime() + "'" +
+            ", agentId=" + getAgentId() +
+            ", type='" + getType() + "'" +
             ", status='" + getStatus() + "'" +
             "}";
     }

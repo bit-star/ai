@@ -1,52 +1,31 @@
 import { TestBed, getTestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { take, map } from 'rxjs/operators';
-import * as moment from 'moment';
-import { DATE_TIME_FORMAT } from 'app/shared/constants/input.constants';
-import { ProcessMsgTaskMpAiService } from 'app/entities/process-msg-task-mp-ai/process-msg-task-mp-ai.service';
-import { IProcessMsgTaskMpAi, ProcessMsgTaskMpAi } from 'app/shared/model/process-msg-task-mp-ai.model';
-import { DdMessageType } from 'app/shared/model/enumerations/dd-message-type.model';
-import { MessageStatus } from 'app/shared/model/enumerations/message-status.model';
+import { ProcessMsgSubTaskMpAiService } from 'app/entities/process-msg-sub-task-mp-ai/process-msg-sub-task-mp-ai.service';
+import { IProcessMsgSubTaskMpAi, ProcessMsgSubTaskMpAi } from 'app/shared/model/process-msg-sub-task-mp-ai.model';
 
 describe('Service Tests', () => {
-  describe('ProcessMsgTaskMpAi Service', () => {
+  describe('ProcessMsgSubTaskMpAi Service', () => {
     let injector: TestBed;
-    let service: ProcessMsgTaskMpAiService;
+    let service: ProcessMsgSubTaskMpAiService;
     let httpMock: HttpTestingController;
-    let elemDefault: IProcessMsgTaskMpAi;
+    let elemDefault: IProcessMsgSubTaskMpAi;
     let expectedResult;
-    let currentDate: moment.Moment;
     beforeEach(() => {
       TestBed.configureTestingModule({
         imports: [HttpClientTestingModule]
       });
       expectedResult = {};
       injector = getTestBed();
-      service = injector.get(ProcessMsgTaskMpAiService);
+      service = injector.get(ProcessMsgSubTaskMpAiService);
       httpMock = injector.get(HttpTestingController);
-      currentDate = moment();
 
-      elemDefault = new ProcessMsgTaskMpAi(
-        0,
-        'AAAAAAA',
-        'AAAAAAA',
-        false,
-        'AAAAAAA',
-        currentDate,
-        0,
-        DdMessageType.Voice,
-        MessageStatus.SentSuccessfully
-      );
+      elemDefault = new ProcessMsgSubTaskMpAi(0, 'AAAAAAA', 0);
     });
 
     describe('Service methods', () => {
       it('should find an element', () => {
-        const returnedFromService = Object.assign(
-          {
-            executeTime: currentDate.format(DATE_TIME_FORMAT)
-          },
-          elemDefault
-        );
+        const returnedFromService = Object.assign({}, elemDefault);
         service
           .find(123)
           .pipe(take(1))
@@ -57,22 +36,16 @@ describe('Service Tests', () => {
         expect(expectedResult).toMatchObject({ body: elemDefault });
       });
 
-      it('should create a ProcessMsgTaskMpAi', () => {
+      it('should create a ProcessMsgSubTaskMpAi', () => {
         const returnedFromService = Object.assign(
           {
-            id: 0,
-            executeTime: currentDate.format(DATE_TIME_FORMAT)
+            id: 0
           },
           elemDefault
         );
-        const expected = Object.assign(
-          {
-            executeTime: currentDate
-          },
-          returnedFromService
-        );
+        const expected = Object.assign({}, returnedFromService);
         service
-          .create(new ProcessMsgTaskMpAi(null))
+          .create(new ProcessMsgSubTaskMpAi(null))
           .pipe(take(1))
           .subscribe(resp => (expectedResult = resp));
         const req = httpMock.expectOne({ method: 'POST' });
@@ -80,27 +53,16 @@ describe('Service Tests', () => {
         expect(expectedResult).toMatchObject({ body: expected });
       });
 
-      it('should update a ProcessMsgTaskMpAi', () => {
+      it('should update a ProcessMsgSubTaskMpAi', () => {
         const returnedFromService = Object.assign(
           {
-            deptIdList: 'BBBBBB',
             useridList: 'BBBBBB',
-            toAllUser: true,
-            msg: 'BBBBBB',
-            executeTime: currentDate.format(DATE_TIME_FORMAT),
-            agentId: 1,
-            type: 'BBBBBB',
-            status: 'BBBBBB'
+            taskId: 1
           },
           elemDefault
         );
 
-        const expected = Object.assign(
-          {
-            executeTime: currentDate
-          },
-          returnedFromService
-        );
+        const expected = Object.assign({}, returnedFromService);
         service
           .update(expected)
           .pipe(take(1))
@@ -110,26 +72,15 @@ describe('Service Tests', () => {
         expect(expectedResult).toMatchObject({ body: expected });
       });
 
-      it('should return a list of ProcessMsgTaskMpAi', () => {
+      it('should return a list of ProcessMsgSubTaskMpAi', () => {
         const returnedFromService = Object.assign(
           {
-            deptIdList: 'BBBBBB',
             useridList: 'BBBBBB',
-            toAllUser: true,
-            msg: 'BBBBBB',
-            executeTime: currentDate.format(DATE_TIME_FORMAT),
-            agentId: 1,
-            type: 'BBBBBB',
-            status: 'BBBBBB'
+            taskId: 1
           },
           elemDefault
         );
-        const expected = Object.assign(
-          {
-            executeTime: currentDate
-          },
-          returnedFromService
-        );
+        const expected = Object.assign({}, returnedFromService);
         service
           .query(expected)
           .pipe(
@@ -143,7 +94,7 @@ describe('Service Tests', () => {
         expect(expectedResult).toContainEqual(expected);
       });
 
-      it('should delete a ProcessMsgTaskMpAi', () => {
+      it('should delete a ProcessMsgSubTaskMpAi', () => {
         service.delete(123).subscribe(resp => (expectedResult = resp.ok));
 
         const req = httpMock.expectOne({ method: 'DELETE' });

@@ -1,0 +1,37 @@
+<div class="row justify-content-center">
+    <div class="col-8">
+        <div *ngIf="processMsgSubTask">
+            <h2><span jhiTranslate="aiApp.processMsgSubTask.detail.title">Process Msg Sub Task</span> {{processMsgSubTask.id}}</h2>
+            <hr>
+            <jhi-alert-error></jhi-alert-error>
+            <dl class="row-md jh-entity-details">
+                <dt><span jhiTranslate="aiApp.processMsgSubTask.useridList">Userid List</span></dt>
+                <dd>
+                    <span>{{processMsgSubTask.useridList}}</span>
+                </dd>
+                <dt><span jhiTranslate="aiApp.processMsgSubTask.taskId">Task Id</span></dt>
+                <dd>
+                    <span>{{processMsgSubTask.taskId}}</span>
+                </dd>
+                <dt><span jhiTranslate="aiApp.processMsgSubTask.processMsgTask">Process Msg Task</span></dt>
+                <dd>
+                    <div *ngIf="processMsgSubTask.processMsgTask">
+                        <a [routerLink]="['/process-msg-task-mp-ai', processMsgSubTask.processMsgTask?.id, 'view']">{{processMsgSubTask.processMsgTask?.id}}</a>
+                    </div>
+                </dd>
+            </dl>
+
+            <button type="submit"
+                    (click)="previousState()"
+                    class="btn btn-info">
+                <fa-icon [icon]="'arrow-left'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back"> Back</span>
+            </button>
+
+            <button type="button"
+                    [routerLink]="['/process-msg-sub-task-mp-ai', processMsgSubTask.id, 'edit']"
+                    class="btn btn-primary">
+                <fa-icon [icon]="'pencil-alt'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit"> Edit</span>
+            </button>
+        </div>
+    </div>
+</div>

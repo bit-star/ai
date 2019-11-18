@@ -1,0 +1,41 @@
+<div class="row justify-content-center">
+    <div class="col-8">
+        <form name="editForm" role="form" novalidate (ngSubmit)="save()" [formGroup]="editForm">
+            <h2 id="jhi-process-msg-sub-task-mp-ai-heading" jhiTranslate="aiApp.processMsgSubTask.home.createOrEditLabel">Create or edit a Process Msg Sub Task</h2>
+            <div>
+                <jhi-alert-error></jhi-alert-error>
+                <div class="form-group" [hidden]="!editForm.get('id').value">
+                    <label for="id" jhiTranslate="global.field.id">ID</label>
+                    <input type="text" class="form-control" id="id" name="id" formControlName="id"
+                        readonly />
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="aiApp.processMsgSubTask.useridList" for="field_useridList">Userid List</label>
+                    <input type="text" class="form-control" name="useridList" id="field_useridList"
+                           formControlName="useridList"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="aiApp.processMsgSubTask.taskId" for="field_taskId">Task Id</label>
+                    <input type="number" class="form-control" name="taskId" id="field_taskId"
+                           formControlName="taskId"/>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-control-label" jhiTranslate="aiApp.processMsgSubTask.processMsgTask" for="field_processMsgTask">Process Msg Task</label>
+                    <select class="form-control" id="field_processMsgTask" name="processMsgTask" formControlName="processMsgTask">
+                        <option [ngValue]="null"></option>
+                        <option [ngValue]="processMsgTaskOption.id === editForm.get('processMsgTask').value?.id ? editForm.get('processMsgTask').value : processMsgTaskOption" *ngFor="let processMsgTaskOption of processmsgtasks; trackBy: trackProcessMsgTaskById">{{processMsgTaskOption.id}}</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <button type="button" id="cancel-save" class="btn btn-secondary"  (click)="previousState()">
+                    <fa-icon [icon]="'ban'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.cancel">Cancel</span>
+                </button>
+                <button type="submit" id="save-entity" [disabled]="editForm.invalid || isSaving" class="btn btn-primary">
+                    <fa-icon [icon]="'save'"></fa-icon>&nbsp;<span jhiTranslate="entity.action.save">Save</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

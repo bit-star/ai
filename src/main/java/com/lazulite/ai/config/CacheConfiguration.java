@@ -53,6 +53,8 @@ public class CacheConfiguration {
             createCache(cm, com.lazulite.ai.domain.ProcessMsgTask.class.getName());
             createCache(cm, com.lazulite.ai.domain.ProcessMsgTask.class.getName() + ".ddMessages");
             createCache(cm, com.lazulite.ai.domain.DdMessage.class.getName());
+            createCache(cm, com.lazulite.ai.domain.ProcessMsgTask.class.getName() + ".processMsgSubTasks");
+            createCache(cm, com.lazulite.ai.domain.ProcessMsgSubTask.class.getName());
             // jhipster-needle-ehcache-add-entry
         };
     }

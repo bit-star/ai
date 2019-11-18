@@ -30,6 +30,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.lazulite.ai.domain.enumeration.DdMessageType;
 import com.lazulite.ai.domain.enumeration.MessageStatus;
 /**
  * Integration tests for the {@link ProcessMsgTaskResource} REST controller.
@@ -37,23 +38,29 @@ import com.lazulite.ai.domain.enumeration.MessageStatus;
 @SpringBootTest(classes = AiApp.class)
 public class ProcessMsgTaskResourceIT {
 
-    private static final String DEFAULT_RECEIVING_DEPARTMENT = "AAAAAAAAAA";
-    private static final String UPDATED_RECEIVING_DEPARTMENT = "BBBBBBBBBB";
+    private static final String DEFAULT_DEPT_ID_LIST = "AAAAAAAAAA";
+    private static final String UPDATED_DEPT_ID_LIST = "BBBBBBBBBB";
 
-    private static final String DEFAULT_RECEIVING_USER = "AAAAAAAAAA";
-    private static final String UPDATED_RECEIVING_USER = "BBBBBBBBBB";
+    private static final String DEFAULT_USERID_LIST = "AAAAAAAAAA";
+    private static final String UPDATED_USERID_LIST = "BBBBBBBBBB";
 
-    private static final String DEFAULT_TITLE = "AAAAAAAAAA";
-    private static final String UPDATED_TITLE = "BBBBBBBBBB";
+    private static final Boolean DEFAULT_TO_ALL_USER = false;
+    private static final Boolean UPDATED_TO_ALL_USER = true;
 
-    private static final String DEFAULT_JSON = "AAAAAAAAAA";
-    private static final String UPDATED_JSON = "BBBBBBBBBB";
+    private static final String DEFAULT_MSG = "AAAAAAAAAA";
+    private static final String UPDATED_MSG = "BBBBBBBBBB";
 
     private static final Instant DEFAULT_EXECUTE_TIME = Instant.ofEpochMilli(0L);
     private static final Instant UPDATED_EXECUTE_TIME = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
+    private static final Long DEFAULT_AGENT_ID = 1L;
+    private static final Long UPDATED_AGENT_ID = 2L;
+
+    private static final DdMessageType DEFAULT_TYPE = DdMessageType.Voice;
+    private static final DdMessageType UPDATED_TYPE = DdMessageType.ActionCard;
+
     private static final MessageStatus DEFAULT_STATUS = MessageStatus.SentSuccessfully;
-    private static final MessageStatus UPDATED_STATUS = MessageStatus.NotSentYet;
+    private static final MessageStatus UPDATED_STATUS = MessageStatus.Sending;
 
     @Autowired
     private ProcessMsgTaskRepository processMsgTaskRepository;
@@ -100,11 +107,13 @@ public class ProcessMsgTaskResourceIT {
      */
     public static ProcessMsgTask createEntity(EntityManager em) {
         ProcessMsgTask processMsgTask = new ProcessMsgTask()
-            .receivingDepartment(DEFAULT_RECEIVING_DEPARTMENT)
-            .receivingUser(DEFAULT_RECEIVING_USER)
-            .title(DEFAULT_TITLE)
-            .json(DEFAULT_JSON)
+            .deptIdList(DEFAULT_DEPT_ID_LIST)
+            .useridList(DEFAULT_USERID_LIST)
+            .toAllUser(DEFAULT_TO_ALL_USER)
+            .msg(DEFAULT_MSG)
             .executeTime(DEFAULT_EXECUTE_TIME)
+            .agentId(DEFAULT_AGENT_ID)
+            .type(DEFAULT_TYPE)
             .status(DEFAULT_STATUS);
         return processMsgTask;
     }
@@ -116,11 +125,13 @@ public class ProcessMsgTaskResourceIT {
      */
     public static ProcessMsgTask createUpdatedEntity(EntityManager em) {
         ProcessMsgTask processMsgTask = new ProcessMsgTask()
-            .receivingDepartment(UPDATED_RECEIVING_DEPARTMENT)
-            .receivingUser(UPDATED_RECEIVING_USER)
-            .title(UPDATED_TITLE)
-            .json(UPDATED_JSON)
+            .deptIdList(UPDATED_DEPT_ID_LIST)
+            .useridList(UPDATED_USERID_LIST)
+            .toAllUser(UPDATED_TO_ALL_USER)
+            .msg(UPDATED_MSG)
             .executeTime(UPDATED_EXECUTE_TIME)
+            .agentId(UPDATED_AGENT_ID)
+            .type(UPDATED_TYPE)
             .status(UPDATED_STATUS);
         return processMsgTask;
     }
@@ -145,11 +156,13 @@ public class ProcessMsgTaskResourceIT {
         List<ProcessMsgTask> processMsgTaskList = processMsgTaskRepository.findAll();
         assertThat(processMsgTaskList).hasSize(databaseSizeBeforeCreate + 1);
         ProcessMsgTask testProcessMsgTask = processMsgTaskList.get(processMsgTaskList.size() - 1);
-        assertThat(testProcessMsgTask.getReceivingDepartment()).isEqualTo(DEFAULT_RECEIVING_DEPARTMENT);
-        assertThat(testProcessMsgTask.getReceivingUser()).isEqualTo(DEFAULT_RECEIVING_USER);
-        assertThat(testProcessMsgTask.getTitle()).isEqualTo(DEFAULT_TITLE);
-        assertThat(testProcessMsgTask.getJson()).isEqualTo(DEFAULT_JSON);
+        assertThat(testProcessMsgTask.getDeptIdList()).isEqualTo(DEFAULT_DEPT_ID_LIST);
+        assertThat(testProcessMsgTask.getUseridList()).isEqualTo(DEFAULT_USERID_LIST);
+        assertThat(testProcessMsgTask.isToAllUser()).isEqualTo(DEFAULT_TO_ALL_USER);
+        assertThat(testProcessMsgTask.getMsg()).isEqualTo(DEFAULT_MSG);
         assertThat(testProcessMsgTask.getExecuteTime()).isEqualTo(DEFAULT_EXECUTE_TIME);
+        assertThat(testProcessMsgTask.getAgentId()).isEqualTo(DEFAULT_AGENT_ID);
+        assertThat(testProcessMsgTask.getType()).isEqualTo(DEFAULT_TYPE);
         assertThat(testProcessMsgTask.getStatus()).isEqualTo(DEFAULT_STATUS);
     }
 
@@ -184,11 +197,13 @@ public class ProcessMsgTaskResourceIT {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(processMsgTask.getId().intValue())))
-            .andExpect(jsonPath("$.[*].receivingDepartment").value(hasItem(DEFAULT_RECEIVING_DEPARTMENT)))
-            .andExpect(jsonPath("$.[*].receivingUser").value(hasItem(DEFAULT_RECEIVING_USER)))
-            .andExpect(jsonPath("$.[*].title").value(hasItem(DEFAULT_TITLE)))
-            .andExpect(jsonPath("$.[*].json").value(hasItem(DEFAULT_JSON)))
+            .andExpect(jsonPath("$.[*].deptIdList").value(hasItem(DEFAULT_DEPT_ID_LIST)))
+            .andExpect(jsonPath("$.[*].useridList").value(hasItem(DEFAULT_USERID_LIST)))
+            .andExpect(jsonPath("$.[*].toAllUser").value(hasItem(DEFAULT_TO_ALL_USER.booleanValue())))
+            .andExpect(jsonPath("$.[*].msg").value(hasItem(DEFAULT_MSG)))
             .andExpect(jsonPath("$.[*].executeTime").value(hasItem(DEFAULT_EXECUTE_TIME.toString())))
+            .andExpect(jsonPath("$.[*].agentId").value(hasItem(DEFAULT_AGENT_ID.intValue())))
+            .andExpect(jsonPath("$.[*].type").value(hasItem(DEFAULT_TYPE.toString())))
             .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())));
     }
     
@@ -203,11 +218,13 @@ public class ProcessMsgTaskResourceIT {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(processMsgTask.getId().intValue()))
-            .andExpect(jsonPath("$.receivingDepartment").value(DEFAULT_RECEIVING_DEPARTMENT))
-            .andExpect(jsonPath("$.receivingUser").value(DEFAULT_RECEIVING_USER))
-            .andExpect(jsonPath("$.title").value(DEFAULT_TITLE))
-            .andExpect(jsonPath("$.json").value(DEFAULT_JSON))
+            .andExpect(jsonPath("$.deptIdList").value(DEFAULT_DEPT_ID_LIST))
+            .andExpect(jsonPath("$.useridList").value(DEFAULT_USERID_LIST))
+            .andExpect(jsonPath("$.toAllUser").value(DEFAULT_TO_ALL_USER.booleanValue()))
+            .andExpect(jsonPath("$.msg").value(DEFAULT_MSG))
             .andExpect(jsonPath("$.executeTime").value(DEFAULT_EXECUTE_TIME.toString()))
+            .andExpect(jsonPath("$.agentId").value(DEFAULT_AGENT_ID.intValue()))
+            .andExpect(jsonPath("$.type").value(DEFAULT_TYPE.toString()))
             .andExpect(jsonPath("$.status").value(DEFAULT_STATUS.toString()));
     }
 
@@ -232,11 +249,13 @@ public class ProcessMsgTaskResourceIT {
         // Disconnect from session so that the updates on updatedProcessMsgTask are not directly saved in db
         em.detach(updatedProcessMsgTask);
         updatedProcessMsgTask
-            .receivingDepartment(UPDATED_RECEIVING_DEPARTMENT)
-            .receivingUser(UPDATED_RECEIVING_USER)
-            .title(UPDATED_TITLE)
-            .json(UPDATED_JSON)
+            .deptIdList(UPDATED_DEPT_ID_LIST)
+            .useridList(UPDATED_USERID_LIST)
+            .toAllUser(UPDATED_TO_ALL_USER)
+            .msg(UPDATED_MSG)
             .executeTime(UPDATED_EXECUTE_TIME)
+            .agentId(UPDATED_AGENT_ID)
+            .type(UPDATED_TYPE)
             .status(UPDATED_STATUS);
 
         restProcessMsgTaskMockMvc.perform(put("/api/process-msg-tasks")
@@ -248,11 +267,13 @@ public class ProcessMsgTaskResourceIT {
         List<ProcessMsgTask> processMsgTaskList = processMsgTaskRepository.findAll();
         assertThat(processMsgTaskList).hasSize(databaseSizeBeforeUpdate);
         ProcessMsgTask testProcessMsgTask = processMsgTaskList.get(processMsgTaskList.size() - 1);
-        assertThat(testProcessMsgTask.getReceivingDepartment()).isEqualTo(UPDATED_RECEIVING_DEPARTMENT);
-        assertThat(testProcessMsgTask.getReceivingUser()).isEqualTo(UPDATED_RECEIVING_USER);
-        assertThat(testProcessMsgTask.getTitle()).isEqualTo(UPDATED_TITLE);
-        assertThat(testProcessMsgTask.getJson()).isEqualTo(UPDATED_JSON);
+        assertThat(testProcessMsgTask.getDeptIdList()).isEqualTo(UPDATED_DEPT_ID_LIST);
+        assertThat(testProcessMsgTask.getUseridList()).isEqualTo(UPDATED_USERID_LIST);
+        assertThat(testProcessMsgTask.isToAllUser()).isEqualTo(UPDATED_TO_ALL_USER);
+        assertThat(testProcessMsgTask.getMsg()).isEqualTo(UPDATED_MSG);
         assertThat(testProcessMsgTask.getExecuteTime()).isEqualTo(UPDATED_EXECUTE_TIME);
+        assertThat(testProcessMsgTask.getAgentId()).isEqualTo(UPDATED_AGENT_ID);
+        assertThat(testProcessMsgTask.getType()).isEqualTo(UPDATED_TYPE);
         assertThat(testProcessMsgTask.getStatus()).isEqualTo(UPDATED_STATUS);
     }
 

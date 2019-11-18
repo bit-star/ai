@@ -24,11 +24,13 @@ export class ProcessMsgTaskMpAiUpdateComponent implements OnInit {
 
   editForm = this.fb.group({
     id: [],
-    receivingDepartment: [],
-    receivingUser: [],
-    title: [],
-    json: [],
+    deptIdList: [],
+    useridList: [],
+    toAllUser: [],
+    msg: [],
     executeTime: [],
+    agentId: [],
+    type: [],
     status: [],
     processInstance: []
   });
@@ -57,11 +59,13 @@ export class ProcessMsgTaskMpAiUpdateComponent implements OnInit {
   updateForm(processMsgTask: IProcessMsgTaskMpAi) {
     this.editForm.patchValue({
       id: processMsgTask.id,
-      receivingDepartment: processMsgTask.receivingDepartment,
-      receivingUser: processMsgTask.receivingUser,
-      title: processMsgTask.title,
-      json: processMsgTask.json,
+      deptIdList: processMsgTask.deptIdList,
+      useridList: processMsgTask.useridList,
+      toAllUser: processMsgTask.toAllUser,
+      msg: processMsgTask.msg,
       executeTime: processMsgTask.executeTime != null ? processMsgTask.executeTime.format(DATE_TIME_FORMAT) : null,
+      agentId: processMsgTask.agentId,
+      type: processMsgTask.type,
       status: processMsgTask.status,
       processInstance: processMsgTask.processInstance
     });
@@ -85,12 +89,14 @@ export class ProcessMsgTaskMpAiUpdateComponent implements OnInit {
     return {
       ...new ProcessMsgTaskMpAi(),
       id: this.editForm.get(['id']).value,
-      receivingDepartment: this.editForm.get(['receivingDepartment']).value,
-      receivingUser: this.editForm.get(['receivingUser']).value,
-      title: this.editForm.get(['title']).value,
-      json: this.editForm.get(['json']).value,
+      deptIdList: this.editForm.get(['deptIdList']).value,
+      useridList: this.editForm.get(['useridList']).value,
+      toAllUser: this.editForm.get(['toAllUser']).value,
+      msg: this.editForm.get(['msg']).value,
       executeTime:
         this.editForm.get(['executeTime']).value != null ? moment(this.editForm.get(['executeTime']).value, DATE_TIME_FORMAT) : undefined,
+      agentId: this.editForm.get(['agentId']).value,
+      type: this.editForm.get(['type']).value,
       status: this.editForm.get(['status']).value,
       processInstance: this.editForm.get(['processInstance']).value
     };

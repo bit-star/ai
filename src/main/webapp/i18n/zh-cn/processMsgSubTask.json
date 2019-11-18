@@ -1,0 +1,24 @@
+{
+  "aiApp": {
+    "processMsgSubTask": {
+      "home": {
+        "title": "Process Msg Sub Tasks",
+        "createLabel": "创建新 Process Msg Sub Task",
+        "createOrEditLabel": "创建或编辑 Process Msg Sub Task",
+        "notFound": "No Process Msg Sub Tasks found"
+      },
+      "created": "Process Msg Sub Task {{ param }} 创建成功",
+      "updated": "Process Msg Sub Task {{ param }} 更新成功",
+      "deleted": "Process Msg Sub Task {{ param }} 删除成功",
+      "delete": {
+        "question": "你确定要删除 Process Msg Sub Task {{ id }} 吗？"
+      },
+      "detail": {
+        "title": "Process Msg Sub Task"
+      },
+      "useridList": "Userid List",
+      "taskId": "Task Id",
+      "processMsgTask": "Process Msg Task"
+    }
+  }
+}

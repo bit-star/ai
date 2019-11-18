@@ -29,6 +29,11 @@ import { RouterModule } from '@angular/router';
       {
         path: 'dd-message-mp-ai',
         loadChildren: () => import('./dd-message-mp-ai/dd-message-mp-ai.module').then(m => m.AiDdMessageMpAiModule)
+      },
+      {
+        path: 'process-msg-sub-task-mp-ai',
+        loadChildren: () =>
+          import('./process-msg-sub-task-mp-ai/process-msg-sub-task-mp-ai.module').then(m => m.AiProcessMsgSubTaskMpAiModule)
       }
       /* jhipster-needle-add-entity-route - JHipster will add entity modules routes here */
     ])

@@ -3,6 +3,7 @@
     "MessageStatus": {
       "null": "",
       "SentSuccessfully": "SentSuccessfully",
+      "Sending": "Sending",
       "NotSentYet": "NotSentYet"
     }
   }

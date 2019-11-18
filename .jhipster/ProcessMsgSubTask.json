@@ -1,0 +1,33 @@
+{
+    "name": "ProcessMsgSubTask",
+    "fields": [
+        {
+            "fieldName": "useridList",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "taskId",
+            "fieldType": "Long"
+        }
+    ],
+    "relationships": [
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "processMsgTask",
+            "otherEntityRelationshipName": "processMsgSubTask",
+            "relationshipName": "processMsgTask",
+            "otherEntityField": "id"
+        }
+    ],
+    "changelogDate": "20191118080937",
+    "entityTableName": "process_msg_sub_task",
+    "dto": "no",
+    "pagination": "pagination",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "readOnly": false,
+    "clientRootFolder": "",
+    "applications": "*",
+    "angularJSSuffix": "mpAi"
+}

@@ -4,5 +4,5 @@ package com.lazulite.ai.domain.enumeration;
  * The DdMessageType enumeration.
  */
 public enum DdMessageType {
-    ActionCard, Markdown, Oa, Link, File
+    Voice, ActionCard, Markdown, Oa, Link, File, Text, Image
 }

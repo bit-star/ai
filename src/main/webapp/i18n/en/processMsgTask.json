@@ -16,13 +16,15 @@
       "detail": {
         "title": "Process Msg Task"
       },
-      "receivingDepartment": "Receiving Department",
-      "receivingUser": "Receiving User",
-      "title": "Title",
-      "json": "Json",
+      "deptIdList": "Dept Id List",
+      "useridList": "Userid List",
+      "toAllUser": "To All User",
+      "msg": "Msg",
       "executeTime": "Execute Time",
+      "agentId": "Agent Id",
+      "type": "Type",
       "status": "Status",
-      "ddMessage": "Dd Message",
+      "processMsgSubTask": "Process Msg Sub Task",
       "processInstance": "Process Instance"
     }
   }

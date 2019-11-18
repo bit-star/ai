@@ -13,6 +13,7 @@
         "formComponentValuesMpAi": "Form Component Values",
         "processMsgTaskMpAi": "Process Msg Task",
         "ddMessageMpAi": "Dd Message",
+        "processMsgSubTaskMpAi": "Process Msg Sub Task",
         "jhipster-needle-menu-add-entry": "JHipster will add additional entities here (do not translate!)"
       },
       "account": {
