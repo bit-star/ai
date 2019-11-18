@@ -23,6 +23,7 @@ entity ProcessInstanceEvent {
 }
 
 entity ProcessInstance{
+	id String,
 	attachedProcessInstanceIds String,
     bizAction String,
     businessId String,
@@ -47,30 +48,27 @@ entity  FormComponentValues{
 }
 
 entity ProcessMsgTask{
-	receivingDepartment String,
-    receivingUser String,
-    title String,
-	json String,
+	deptIdList String,
+    useridList String,
+    toAllUser Boolean,
+    msg String,
     executeTime Instant,
+    agentId Long,
+    type DdMessageType,
     status MessageStatus
 }
 
-
-entity DdMessage {
-    receivingDepartment String,
-    receivingUser String,
-    title String,
-	json String,
-    sendTime Instant,
-    type DdMessageType
+entity ProcessMsgSubTask{
+    useridList String,
+    taskId Long
 }
 
 enum DdMessageType {
-	ActionCard, Markdown, Oa, Link, File 
+	Voice , ActionCard, Markdown, Oa, Link, File , Text , Image
 }
 
 enum MessageStatus {
-	 SentSuccessfully , NotSentYet
+	 SentSuccessfully , Sending, NotSentYet
 }
 
 
@@ -85,7 +83,7 @@ relationship OneToMany {
 	ProcessInstance  to ProcessInstanceEvent,
 	ProcessInstance to FormComponentValues,
     ProcessInstance to ProcessMsgTask,
-    ProcessMsgTask to DdMessage,
+    ProcessMsgTask to ProcessMsgSubTask
 }
 
 // Set pagination options
