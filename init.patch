@@ -1,0 +1,3865 @@
+Index: src/main/resources/banner.txt
+===================================================================
+--- src/main/resources/banner.txt	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/resources/banner.txt	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
+@@ -1,10 +0,0 @@
+-
+-  ${AnsiColor.GREEN}      ██╗${AnsiColor.RED} ██╗   ██╗ ████████╗ ███████╗   ██████╗ ████████╗ ████████╗ ███████╗
+-  ${AnsiColor.GREEN}      ██║${AnsiColor.RED} ██║   ██║ ╚══██╔══╝ ██╔═══██╗ ██╔════╝ ╚══██╔══╝ ██╔═════╝ ██╔═══██╗
+-  ${AnsiColor.GREEN}      ██║${AnsiColor.RED} ████████║    ██║    ███████╔╝ ╚█████╗     ██║    ██████╗   ███████╔╝
+-  ${AnsiColor.GREEN}██╗   ██║${AnsiColor.RED} ██╔═══██║    ██║    ██╔════╝   ╚═══██╗    ██║    ██╔═══╝   ██╔══██║
+-  ${AnsiColor.GREEN}╚██████╔╝${AnsiColor.RED} ██║   ██║ ████████╗ ██║       ██████╔╝    ██║    ████████╗ ██║  ╚██╗
+-  ${AnsiColor.GREEN} ╚═════╝ ${AnsiColor.RED} ╚═╝   ╚═╝ ╚═══════╝ ╚═╝       ╚═════╝     ╚═╝    ╚═══════╝ ╚═╝   ╚═╝
+-
+-${AnsiColor.BRIGHT_BLUE}:: JHipster 🤓  :: Running Spring Boot ${spring-boot.version} ::
+-:: https://www.jhipster.tech ::${AnsiColor.DEFAULT}
+Index: src/main/java/com/lazulite/ai/dingtalk/MessageUtil.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/dingtalk/MessageUtil.java	(date 1574146071000)
++++ src/main/java/com/lazulite/ai/dingtalk/MessageUtil.java	(date 1574146071000)
+@@ -0,0 +1,61 @@
++package com.lazulite.ai.dingtalk;
++
++import com.alibaba.fastjson.JSON;
++import com.dingtalk.api.DefaultDingTalkClient;
++import com.dingtalk.api.DingTalkClient;
++import com.dingtalk.api.request.OapiMessageCorpconversationAsyncsendV2Request;
++import com.dingtalk.api.request.OapiProcessinstanceGetRequest;
++import com.dingtalk.api.response.OapiMessageCorpconversationAsyncsendV2Response;
++import com.dingtalk.api.response.OapiProcessinstanceGetResponse;
++import com.lazulite.ai.dingtalk.auth.DingtalkAuthService;
++import com.taobao.api.ApiException;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.stereotype.Service;
++
++
++/**
++ * @author 令久
++ * @date 2018/08/28
++ */
++@Service
++public class MessageUtil {
++
++
++
++    private static final Logger bizLogger = LoggerFactory.getLogger(MessageUtil.class);
++
++
++    @Autowired
++    DingtalkAuthService dingtalkAuthService;
++
++    public void sendMessageToOriginator(String processInstanceId) throws RuntimeException {
++        try {
++            DingTalkClient client = new DefaultDingTalkClient(URLConstant.URL_PROCESSINSTANCE_GET);
++            OapiProcessinstanceGetRequest request = new OapiProcessinstanceGetRequest();
++            request.setProcessInstanceId(processInstanceId);
++            OapiProcessinstanceGetResponse response = client.execute(request, dingtalkAuthService.getAccessToken());
++            String recieverUserId = response.getProcessInstance().getOriginatorUserid();
++
++            client = new DefaultDingTalkClient(URLConstant.MESSAGE_ASYNCSEND);
++
++            OapiMessageCorpconversationAsyncsendV2Request messageRequest = new OapiMessageCorpconversationAsyncsendV2Request();
++            messageRequest.setUseridList(recieverUserId);
++            messageRequest.setAgentId(Constant.AGENTID);
++            messageRequest.setToAllUser(false);
++
++            OapiMessageCorpconversationAsyncsendV2Request.Msg msg = new OapiMessageCorpconversationAsyncsendV2Request.Msg();
++            msg.setMsgtype("text");
++            msg.setText(new OapiMessageCorpconversationAsyncsendV2Request.Text());
++            msg.getText().setContent(response.getProcessInstance().getTitle()+"审批完成！");
++            messageRequest.setMsg(msg);
++
++            OapiMessageCorpconversationAsyncsendV2Response rsp = client.execute(messageRequest,dingtalkAuthService.getAccessToken());
++            System.out.println("消息发送相应："+JSON.toJSONString(rsp));
++        } catch (ApiException e) {
++            bizLogger.error("send message failed", e);
++            throw new RuntimeException();
++        }
++    }
++}
+Index: src/main/java/com/lazulite/ai/dingtalk/Constant.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/dingtalk/Constant.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/dingtalk/Constant.java	(date 1574064629000)
+@@ -0,0 +1,44 @@
++package com.lazulite.ai.dingtalk;
++
++/**
++ * 项目中的常量定义类
++ */
++public class Constant {
++    /**
++     * 企业corpid, 需要修改成开发者所在企业
++     */
++    public static final String CORP_ID = "ding6f768bca630f8220";
++    /**
++     * 应用的AppKey，登录开发者后台，点击应用管理，进入应用详情可见
++     */
++    public static final String APPKEY = "dingzemh1ik03xilrpn5";
++    /**
++     * 应用的AppSecret，登录开发者后台，点击应用管理，进入应用详情可见
++     */
++    public static final String APPSECRET = "aSzXwYoxS-_3gmUMWCes35rT0FvYpnYW0minqr_WWKAggK9q1rezFdSd0pUG9j1a";
++
++    /**
++     * 数据加密密钥。用于回调数据的加密，长度固定为43个字符，从a-z, A-Z, 0-9共62个字符中选取,您可以随机生成
++     */
++    public static final String ENCODING_AES_KEY = "Ixewk2huE2GUbvdUNwHzCuuBUcnUk7XVoxnU9TFQtbc";
++
++    /**
++     * 加解密需要用到的token，企业可以随机填写。如 "12345"
++     */
++    public static final String TOKEN = "12345";
++
++    /**
++     * 应用的agentdId，登录开发者后台可查看
++     */
++    public static final Long AGENTID = 316974687L;
++
++    /**
++     * 审批模板唯一标识，可以在审批管理后台找到
++     */
++    public static final String PROCESS_CODE = "PROC-C0E9919D-25D1-4A5E-BB13-FB95109AF8A9";
++
++    /**
++     * 回调host
++     */
++    public static final String CALLBACK_URL_HOST = "http://chenjunfu.vaiwan.com";
++}
+Index: src/main/java/com/lazulite/ai/dingtalk/URLConstant.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/dingtalk/URLConstant.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/dingtalk/URLConstant.java	(date 1574064629000)
+@@ -0,0 +1,44 @@
++package com.lazulite.ai.dingtalk;
++
++public class URLConstant {
++    /**
++     * 钉钉网关gettoken地址
++     */
++    public static final String URL_GET_TOKKEN = "https://oapi.dingtalk.com/gettoken";
++
++    /**
++     *获取用户在企业内userId的接口URL
++     */
++    public static final String URL_GET_USER_INFO = "https://oapi.dingtalk.com/user/getuserinfo";
++
++    /**
++     *获取用户姓名的接口url
++     */
++    public static final String URL_USER_GET = "https://oapi.dingtalk.com/user/get";
++
++    /**
++     * 发起审批实例的接口url
++     */
++    public static final String URL_PROCESSINSTANCE_START = "https://oapi.dingtalk.com/topapi/processinstance/create";
++
++    /**
++     * 获取审批实例的接口url
++     */
++    public static final String URL_PROCESSINSTANCE_GET = "https://oapi.dingtalk.com/topapi/processinstance/get";
++
++    /**
++     * 发送企业通知消息的接口url
++     */
++    public static final String MESSAGE_ASYNCSEND = "https://oapi.dingtalk.com/topapi/message/corpconversation/asyncsend_v2";
++
++    /**
++     * 删除企业回调接口url
++     */
++    public static final String DELETE_CALLBACK = "https://oapi.dingtalk.com/call_back/delete_call_back";
++
++    /**
++     * 注册企业回调接口url
++     */
++    public static final String REGISTER_CALLBACK = "https://oapi.dingtalk.com/call_back/register_call_back";
++
++}
+Index: src/main/java/com/lazulite/ai/config/Constants.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/config/Constants.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/java/com/lazulite/ai/config/Constants.java	(date 1574064629000)
+@@ -7,11 +7,50 @@
+ 
+     // Regex for acceptable logins
+     public static final String LOGIN_REGEX = "^[_.@A-Za-z0-9-]*$";
+-    
++
+     public static final String SYSTEM_ACCOUNT = "system";
+     public static final String DEFAULT_LANGUAGE = "zh-cn";
+     public static final String ANONYMOUS_USER = "anonymoususer";
+ 
++    public static final String ACCESS_TOKEN = "accessToken";
++    public static final String JSAPI_TICKET = "jsapiTicket";
++    public static final String REPEAT_LOGIN = "repeatLogin";
++    public static final String COMMEND_STATUS = "commendStatus";
++    public static final String COLLECT_STATUS = "collectStatus";
++    public static final String CACHE_NAME = "has-sub-element-cache";
++    public static final String DEFAULT_DD_PASSWORD = "123456";
++    public static final String DEFAULT_PASSWORD = "123456";
++    public static final String BUCKET_NAME = "hq37-vd";
++    public static final int ACCESS_TOKEN_SECONDS = 6600; //默认1个小时50分钟
++    public static final int JSAPI_TICKET_CACHE_TIME = 6600;
++    public static final int REPEAT_LOGIN_CACHE_TIME = 3;
++    public static final int COMMEND_STATUS_CACHE_TIME = 86400;
++    public static final int COLLECT_STATUS_CACHE_TIME = 86400;
++
+     private Constants() {
+     }
++
++    /**
++     * 钉钉网关gettoken地址
++     */
++    public static final String URL_GET_TOKKEN = "https://oapi.dingtalk.com/gettoken";
++
++    /**
++     *获取用户在企业内userId的接口URL
++     */
++    public static final String URL_GET_USER_INFO = "https://oapi.dingtalk.com/user/getuserinfo";
++
++    /**
++     *获取用户姓名的接口url
++     */
++    public static final String URL_USER_GET = "https://oapi.dingtalk.com/user/get";
++
++    //uat环境
++    public static final String UUC_DEP_SEARCH_URL = "http://ouat.fosun.com/uuc/fosun/out/outwork/getEmployeeByDepId";
++    public static final String UUC_ONE_JOBCODE_SEARCH_URL = "http://ouat.fosun.com/uuc/fosun/out/outwork/getFosunEmployeesDetails";
++    public static final String UUC_ONE_SEARCH_URL = "http://ouat.fosun.com/uuc/fosun/out/outwork/getEmployeesDetails";
++    public static final String UUC_PAGE_SEARCH_URL = "http://ouat.fosun.com/uuc/fosun/out/outwork/getFosunEmployeesPage";
++    public static final String UUC_DDID_SEARCH_DEPARTMENT = "http://ouat.fosun.com/uuc_ext/api/department/get";
++
++
+ }
+Index: src/main/java/com/lazulite/ai/dingtalk/aes/PKCS7Padding.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/dingtalk/aes/PKCS7Padding.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/dingtalk/aes/PKCS7Padding.java	(date 1574064629000)
+@@ -0,0 +1,50 @@
++package com.lazulite.ai.dingtalk.aes;
++
++import java.nio.charset.Charset;
++import java.util.Arrays;
++
++/*
++ * PKCS7算法的加密填充
++ */
++
++public class PKCS7Padding {
++    private final static Charset CHARSET    = Charset.forName("utf-8");
++    private final static int     BLOCK_SIZE = 32;
++
++    /**
++     * 填充mode字节
++     * @param count
++     * @return
++     */
++    public static byte[] getPaddingBytes(int count) {
++        int amountToPad = BLOCK_SIZE - (count % BLOCK_SIZE);
++        if (amountToPad == 0) {
++            amountToPad = BLOCK_SIZE;
++        }
++        char padChr = chr(amountToPad);
++        String tmp = new String();
++        for (int index = 0; index < amountToPad; index++) {
++            tmp += padChr;
++        }
++        return tmp.getBytes(CHARSET);
++    }
++
++    /**
++     * 移除mode填充字节
++     * @param decrypted
++     * @return
++     */
++    public static byte[] removePaddingBytes(byte[] decrypted) {
++        int pad = (int) decrypted[decrypted.length - 1];
++        if (pad < 1 || pad > BLOCK_SIZE) {
++            pad = 0;
++        }
++        return Arrays.copyOfRange(decrypted, 0, decrypted.length - pad);
++    }
++
++    private static char chr(int a) {
++        byte target = (byte) (a & 0xFF);
++        return (char) target;
++    }
++
++}
+Index: src/main/java/com/lazulite/ai/dingtalk/aes/DingTalkJssdkConfig.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/dingtalk/aes/DingTalkJssdkConfig.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/dingtalk/aes/DingTalkJssdkConfig.java	(date 1574064629000)
+@@ -0,0 +1,80 @@
++package com.lazulite.ai.dingtalk.aes;
++
++public class DingTalkJssdkConfig {
++    private String jsticket;
++    private String signature;
++    private String nonceStr;
++    private long timeStamp;
++    private String corpId;
++    private String agentid;
++    private String queryString;
++
++    public String getJsticket() {
++        return jsticket;
++    }
++
++    public void setJsticket(String jsticket) {
++        this.jsticket = jsticket;
++    }
++
++    public String getSignature() {
++        return signature;
++    }
++
++    public void setSignature(String signature) {
++        this.signature = signature;
++    }
++
++    public String getNonceStr() {
++        return nonceStr;
++    }
++
++    public void setNonceStr(String nonceStr) {
++        this.nonceStr = nonceStr;
++    }
++
++    public long getTimeStamp() {
++        return timeStamp;
++    }
++
++    public void setTimeStamp(long timeStamp) {
++        this.timeStamp = timeStamp;
++    }
++
++    public String getCorpId() {
++        return corpId;
++    }
++
++    public void setCorpId(String corpId) {
++        this.corpId = corpId;
++    }
++
++    public String getAgentid() {
++        return agentid;
++    }
++
++    public void setAgentid(String agentid) {
++        this.agentid = agentid;
++    }
++
++    public String getQueryString() {
++        return queryString;
++    }
++
++    public void setQueryString(String queryString) {
++        this.queryString = queryString;
++    }
++
++    @Override
++    public String toString() {
++        return "DingTalkJssdkConfig{" +
++            "jsticket='" + jsticket + '\'' +
++            ", signature='" + signature + '\'' +
++            ", nonceStr='" + nonceStr + '\'' +
++            ", timeStamp=" + timeStamp +
++            ", corpId='" + corpId + '\'' +
++            ", agentid='" + agentid + '\'' +
++            ", queryString='" + queryString + '\'' +
++            '}';
++    }
++}
+Index: src/main/java/com/lazulite/ai/dingtalk/aes/Utils.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/dingtalk/aes/Utils.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/dingtalk/aes/Utils.java	(date 1574064629000)
+@@ -0,0 +1,53 @@
++package com.lazulite.ai.dingtalk.aes;
++
++import java.util.Random;
++
++/**
++ * 加解密工具类
++ */
++public class Utils {
++
++    /**
++     * 获取随机字符串
++     *
++     * @return
++     */
++    public static String getRandomStr(int count) {
++        String base = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
++        Random random = new Random();
++        StringBuffer sb = new StringBuffer();
++        for (int i = 0; i < count; i++) {
++            int number = random.nextInt(base.length());
++            sb.append(base.charAt(number));
++        }
++        return sb.toString();
++    }
++
++
++    /*
++     * int转byte数组,高位在前
++     */
++    public static byte[] int2Bytes(int count) {
++        byte[] byteArr = new byte[4];
++        byteArr[3] = (byte) (count & 0xFF);
++        byteArr[2] = (byte) (count >> 8 & 0xFF);
++        byteArr[1] = (byte) (count >> 16 & 0xFF);
++        byteArr[0] = (byte) (count >> 24 & 0xFF);
++        return byteArr;
++    }
++
++    /**
++     * 高位在前bytes数组转int
++     *
++     * @param byteArr
++     * @return
++     */
++    public static int bytes2int(byte[] byteArr) {
++        int count = 0;
++        for (int i = 0; i < 4; i++) {
++            count <<= 8;
++            count |= byteArr[i] & 0xff;
++        }
++        return count;
++    }
++}
+Index: src/main/java/com/lazulite/ai/dingtalk/aes/DingTalkEncryptException.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/dingtalk/aes/DingTalkEncryptException.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/dingtalk/aes/DingTalkEncryptException.java	(date 1574064629000)
+@@ -0,0 +1,53 @@
++package com.lazulite.ai.dingtalk.aes;
++
++import java.util.HashMap;
++import java.util.Map;
++
++/**
++ * 钉钉开放平台加解密异常类
++ */
++public class DingTalkEncryptException extends Exception {
++    /**成功**/
++    public static final int SUCCESS = 0;
++    /**加密明文文本非法**/
++    public final static int  ENCRYPTION_PLAINTEXT_ILLEGAL = 900001;
++    /**加密时间戳参数非法**/
++    public final static int  ENCRYPTION_TIMESTAMP_ILLEGAL = 900002;
++    /**加密随机字符串参数非法**/
++    public final static int  ENCRYPTION_NONCE_ILLEGAL = 900003;
++    /**不合法的aeskey**/
++    public final static int AES_KEY_ILLEGAL = 900004;
++    /**签名不匹配**/
++    public final static int SIGNATURE_NOT_MATCH = 900005;
++    /**计算签名错误**/
++    public final static int COMPUTE_SIGNATURE_ERROR = 900006;
++    /**计算加密文字错误**/
++    public final static int COMPUTE_ENCRYPT_TEXT_ERROR  = 900007;
++    /**计算解密文字错误**/
++    public final static int COMPUTE_DECRYPT_TEXT_ERROR  = 900008;
++    /**计算解密文字长度不匹配**/
++    public final static int COMPUTE_DECRYPT_TEXT_LENGTH_ERROR  = 900009;
++    /**计算解密文字corpid不匹配**/
++    public final static int COMPUTE_DECRYPT_TEXT_CORPID_ERROR  = 900010;
++
++    private static Map<Integer,String> msgMap = new HashMap<Integer,String>();
++    static{
++        msgMap.put(SUCCESS,"成功");
++        msgMap.put(ENCRYPTION_PLAINTEXT_ILLEGAL,"加密明文文本非法");
++        msgMap.put(ENCRYPTION_TIMESTAMP_ILLEGAL,"加密时间戳参数非法");
++        msgMap.put(ENCRYPTION_NONCE_ILLEGAL,"加密随机字符串参数非法");
++        msgMap.put(SIGNATURE_NOT_MATCH,"签名不匹配");
++        msgMap.put(COMPUTE_SIGNATURE_ERROR,"签名计算失败");
++        msgMap.put(AES_KEY_ILLEGAL,"不合法的aes key");
++        msgMap.put(COMPUTE_ENCRYPT_TEXT_ERROR,"计算加密文字错误");
++        msgMap.put(COMPUTE_DECRYPT_TEXT_ERROR,"计算解密文字错误");
++        msgMap.put(COMPUTE_DECRYPT_TEXT_LENGTH_ERROR,"计算解密文字长度不匹配");
++        msgMap.put(COMPUTE_DECRYPT_TEXT_CORPID_ERROR,"计算解密文字corpid或者suiteKey不匹配");
++    }
++
++    public Integer  code;
++    public DingTalkEncryptException(Integer exceptionCode){
++        super(msgMap.get(exceptionCode));
++        this.code = exceptionCode;
++    }
++}
+Index: src/main/java/com/lazulite/ai/dingtalk/aes/DingTalkEncryptor.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/dingtalk/aes/DingTalkEncryptor.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/dingtalk/aes/DingTalkEncryptor.java	(date 1574064629000)
+@@ -0,0 +1,211 @@
++package com.lazulite.ai.dingtalk.aes;
++
++import org.apache.commons.codec.binary.Base64;
++
++import javax.crypto.Cipher;
++import javax.crypto.spec.IvParameterSpec;
++import javax.crypto.spec.SecretKeySpec;
++import java.io.ByteArrayOutputStream;
++import java.nio.charset.Charset;
++import java.security.MessageDigest;
++import java.util.Arrays;
++import java.util.HashMap;
++import java.util.Map;
++
++
++/**
++ * 钉钉开放平台加解密方法
++ * 在ORACLE官方网站下载JCE无限制权限策略文件
++ *     JDK6的下载地址：http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html
++ *     JDK7的下载地址： http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html
++ */
++public class DingTalkEncryptor {
++
++    private static final Charset CHARSET = Charset.forName("utf-8");
++    private static final Base64 base64  = new Base64();
++    private byte[]         aesKey;
++    private String         token;
++    private String         corpId;
++    /**ask getPaddingBytes key固定长度**/
++    private static final Integer AES_ENCODE_KEY_LENGTH = 43;
++    /**加密随机字符串字节长度**/
++    private static final Integer RANDOM_LENGTH = 16;
++
++    /**
++     * 构造函数
++     * @param token             钉钉开放平台上，开发者设置的token
++     * @param encodingAesKey  钉钉开放台上，开发者设置的EncodingAESKey
++     * @param corpId           ISV进行配置的时候应该传对应套件的SUITE_KEY，普通企业是Corpid
++     * @throws DingTalkEncryptException 执行失败，请查看该异常的错误码和具体的错误信息
++     */
++    public DingTalkEncryptor(String token, String encodingAesKey, String corpId) throws DingTalkEncryptException {
++        if (null==encodingAesKey ||  encodingAesKey.length() != AES_ENCODE_KEY_LENGTH) {
++            throw new DingTalkEncryptException(DingTalkEncryptException.AES_KEY_ILLEGAL);
++        }
++        this.token = token;
++        this.corpId = corpId;
++        aesKey = Base64.decodeBase64(encodingAesKey + "=");
++    }
++
++    /**
++     * 将和钉钉开放平台同步的消息体加密,返回加密Map
++     * @param plaintext     传递的消息体明文
++     * @param timeStamp      时间戳
++     * @param nonce           随机字符串
++     * @return
++     * @throws DingTalkEncryptException
++     */
++    public Map<String,String> getEncryptedMap(String plaintext, Long timeStamp, String nonce) throws DingTalkEncryptException {
++        if(null==plaintext){
++            throw new DingTalkEncryptException(DingTalkEncryptException.ENCRYPTION_PLAINTEXT_ILLEGAL);
++        }
++        if(null==timeStamp){
++            throw new DingTalkEncryptException(DingTalkEncryptException.ENCRYPTION_TIMESTAMP_ILLEGAL);
++        }
++        if(null==nonce){
++            throw new DingTalkEncryptException(DingTalkEncryptException.ENCRYPTION_NONCE_ILLEGAL);
++        }
++        // 加密
++        String encrypt = encrypt(Utils.getRandomStr(RANDOM_LENGTH), plaintext);
++        String signature = getSignature(token, String.valueOf(timeStamp), nonce, encrypt);
++        Map<String,String> resultMap = new HashMap<String, String>();
++        resultMap.put("msg_signature", signature);
++        resultMap.put("encrypt", encrypt);
++        resultMap.put("timeStamp", String.valueOf(timeStamp));
++        resultMap.put("nonce", nonce);
++        return  resultMap;
++    }
++
++    /**
++     * 密文解密
++     * @param msgSignature     签名串
++     * @param timeStamp        时间戳
++     * @param nonce             随机串
++     * @param encryptMsg       密文
++     * @return                  解密后的原文
++     * @throws DingTalkEncryptException
++     */
++    public String getDecryptMsg(String msgSignature, String timeStamp, String nonce, String encryptMsg)throws DingTalkEncryptException {
++        //校验签名
++        String signature = getSignature(token, timeStamp, nonce, encryptMsg);
++        if (!signature.equals(msgSignature)) {
++            throw new DingTalkEncryptException(DingTalkEncryptException.COMPUTE_SIGNATURE_ERROR);
++        }
++        // 解密
++        String result = decrypt(encryptMsg);
++        return result;
++    }
++
++
++    /*
++     * 对明文加密.
++     * @param text 需要加密的明文
++     * @return 加密后base64编码的字符串
++     */
++    private String encrypt(String random, String plaintext) throws DingTalkEncryptException {
++        try {
++            byte[] randomBytes = random.getBytes(CHARSET);
++            byte[] plainTextBytes = plaintext.getBytes(CHARSET);
++            byte[] lengthByte = Utils.int2Bytes(plainTextBytes.length);
++            byte[] corpidBytes = corpId.getBytes(CHARSET);
++            ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
++            byteStream.write(randomBytes);
++            byteStream.write(lengthByte);
++            byteStream.write(plainTextBytes);
++            byteStream.write(corpidBytes);
++            byte[] padBytes = PKCS7Padding.getPaddingBytes(byteStream.size());
++            byteStream.write(padBytes);
++            byte[] unencrypted = byteStream.toByteArray();
++            byteStream.close();
++            Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
++            SecretKeySpec keySpec = new SecretKeySpec(aesKey, "AES");
++            IvParameterSpec iv = new IvParameterSpec(aesKey, 0, 16);
++            cipher.init(Cipher.ENCRYPT_MODE, keySpec, iv);
++            byte[] encrypted = cipher.doFinal(unencrypted);
++            String result = base64.encodeToString(encrypted);
++            return result;
++        } catch (Exception e) {
++            throw new DingTalkEncryptException(DingTalkEncryptException.COMPUTE_ENCRYPT_TEXT_ERROR);
++        }
++    }
++
++    /*
++     * 对密文进行解密.
++     * @param text 需要解密的密文
++     * @return 解密得到的明文
++     */
++    private String decrypt(String text) throws DingTalkEncryptException {
++        byte[] originalArr;
++        try {
++            // 设置解密模式为AES的CBC模式
++            Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
++            SecretKeySpec keySpec = new SecretKeySpec(aesKey, "AES");
++            IvParameterSpec iv = new IvParameterSpec(Arrays.copyOfRange(aesKey, 0, 16));
++            cipher.init(Cipher.DECRYPT_MODE, keySpec, iv);
++            // 使用BASE64对密文进行解码
++            byte[] encrypted = Base64.decodeBase64(text);
++            // 解密
++            originalArr = cipher.doFinal(encrypted);
++        } catch (Exception e) {
++            throw new DingTalkEncryptException(DingTalkEncryptException.COMPUTE_DECRYPT_TEXT_ERROR);
++        }
++
++        String plainText;
++        String fromCorpid;
++        try {
++            // 去除补位字符
++            byte[] bytes = PKCS7Padding.removePaddingBytes(originalArr);
++            // 分离16位随机字符串,网络字节序和corpId
++            byte[] networkOrder = Arrays.copyOfRange(bytes, 16, 20);
++            int plainTextLegth = Utils.bytes2int(networkOrder);
++            plainText = new String(Arrays.copyOfRange(bytes, 20, 20 + plainTextLegth), CHARSET);
++            fromCorpid = new String(Arrays.copyOfRange(bytes, 20 + plainTextLegth, bytes.length), CHARSET);
++        } catch (Exception e) {
++            throw new DingTalkEncryptException(DingTalkEncryptException.COMPUTE_DECRYPT_TEXT_LENGTH_ERROR);
++        }
++
++        // corpid不相同的情况
++        if (!fromCorpid.equals(corpId)) {
++            throw new DingTalkEncryptException(DingTalkEncryptException.COMPUTE_DECRYPT_TEXT_CORPID_ERROR);
++        }
++        return plainText;
++    }
++
++    /**
++     * 数字签名
++     * @param token         isv token
++     * @param timestamp     时间戳
++     * @param nonce          随机串
++     * @param encrypt       加密文本
++     * @return
++     * @throws DingTalkEncryptException
++     */
++    public String getSignature(String token, String timestamp, String nonce, String encrypt) throws DingTalkEncryptException {
++        try {
++            String[] array = new String[] { token, timestamp, nonce, encrypt };
++            Arrays.sort(array);
++            StringBuffer sb = new StringBuffer();
++            for (int i = 0; i < 4; i++) {
++                sb.append(array[i]);
++            }
++            String str = sb.toString();
++            MessageDigest md = MessageDigest.getInstance("SHA-1");
++            md.update(str.getBytes());
++            byte[] digest = md.digest();
++
++            StringBuffer hexstr = new StringBuffer();
++            String shaHex = "";
++            for (int i = 0; i < digest.length; i++) {
++                shaHex = Integer.toHexString(digest[i] & 0xFF);
++                if (shaHex.length() < 2) {
++                    hexstr.append(0);
++                }
++                hexstr.append(shaHex);
++            }
++            return hexstr.toString();
++        } catch (Exception e) {
++            throw new DingTalkEncryptException(DingTalkEncryptException.COMPUTE_SIGNATURE_ERROR);
++        }
++    }
++
++}
+Index: src/main/java/com/lazulite/ai/dingtalk/aes/DingTalkJsApiSingnature.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/dingtalk/aes/DingTalkJsApiSingnature.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/dingtalk/aes/DingTalkJsApiSingnature.java	(date 1574064629000)
+@@ -0,0 +1,57 @@
++package com.lazulite.ai.dingtalk.aes;
++
++import java.security.MessageDigest;
++import java.util.Formatter;
++
++/**
++ * 钉钉jsapi签名工具类
++ */
++public class DingTalkJsApiSingnature {
++    /**
++     * 获取jsapi签名
++     * @param url
++     * @param nonce
++     * @param timeStamp
++     * @param jsTicket
++     * @return
++     * @throws DingTalkEncryptException
++     */
++    public static String getJsApiSingnature(String url,String nonce,Long timeStamp,String jsTicket) throws DingTalkEncryptException {
++        String plainTex = "jsapi_ticket=" + jsTicket + "&noncestr=" + nonce + "&timestamp=" + timeStamp + "&url=" + url;
++        String signature = "";
++
++        try {
++            MessageDigest crypt = MessageDigest.getInstance("SHA-1");
++            crypt.reset();
++            crypt.update(plainTex.getBytes("UTF-8"));
++            signature = byteToHex(crypt.digest());
++            return signature;
++        } catch (Exception var7) {
++            throw new DingTalkEncryptException(900006);
++        }
++    }
++
++    private static String byteToHex(final byte[] hash) {
++        Formatter formatter = new Formatter();
++        byte[] var2 = hash;
++        int var3 = hash.length;
++
++        for(int var4 = 0; var4 < var3; ++var4) {
++            byte b = var2[var4];
++            formatter.format("%02x", b);
++        }
++
++        String result = formatter.toString();
++        formatter.close();
++        return result;
++    }
++
++
++    public static void main1(String args[]) throws Exception{
++        String url="http://10.62.53.138:3000/jsapi";
++        String nonce="abcdefgh";
++        Long timeStamp = 1437027269927L;
++        String tikcet="zHoQdGJuH0ZDebwo7sLqLzHGUueLmkWCC4RycYgkuvDu3eoROgN5qhwnQLgfzwEXtuR9SDzh6BdhyVngzAjrxV";
++        System.err.println(getJsApiSingnature(url,nonce,timeStamp,tikcet));
++    }
++}
+Index: src/main/java/com/lazulite/ai/dingtalk/auth/DingtalkAuthService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/dingtalk/auth/DingtalkAuthService.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/dingtalk/auth/DingtalkAuthService.java	(date 1574064629000)
+@@ -0,0 +1,211 @@
++package com.lazulite.ai.dingtalk.auth;
++
++
++import com.alibaba.fastjson.JSONObject;
++import com.dingtalk.api.DefaultDingTalkClient;
++import com.dingtalk.api.DingTalkClient;
++import com.dingtalk.api.request.OapiGetJsapiTicketRequest;
++import com.dingtalk.api.request.OapiGettokenRequest;
++import com.dingtalk.api.request.OapiSsoGettokenRequest;
++import com.dingtalk.api.response.OapiGetJsapiTicketResponse;
++import com.dingtalk.api.response.OapiGettokenResponse;
++import com.dingtalk.api.response.OapiSsoGettokenResponse;
++import com.lazulite.ai.config.Constants;
++import com.lazulite.ai.dingtalk.aes.DingTalkEncryptException;
++import com.lazulite.ai.dingtalk.aes.DingTalkJsApiSingnature;
++import com.lazulite.ai.dingtalk.aes.DingTalkJssdkConfig;
++import com.taobao.api.ApiException;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.cache.Cache;
++import org.springframework.cache.CacheManager;
++import org.springframework.cache.annotation.CacheConfig;
++import org.springframework.core.env.Environment;
++import org.springframework.stereotype.Component;
++
++import javax.servlet.http.HttpServletRequest;
++import java.net.URLDecoder;
++
++
++/**
++ * AccessToken和jsticket的获取封装
++ */
++@Component
++@CacheConfig(cacheNames = {Constants.ACCESS_TOKEN, Constants.JSAPI_TICKET})
++public class DingtalkAuthService {
++
++    private final Logger log = LoggerFactory.getLogger(DingtalkAuthService.class);
++
++    @Autowired
++    private Environment environment;
++
++
++    @Autowired
++    CacheManager cacheManager;
++
++
++    /*
++     * 在此方法中，为了避免频繁获取access_token，
++     * 在距离上一次获取access_token时间在两个小时之内的情况，
++     * 将直接从持久化存储中读取access_token
++     *
++     * 因为access_token和jsapi_ticket的过期时间都是7200秒
++     * 所以在获取access_token的同时也去获取了jsapi_ticket
++     * 注：jsapi_ticket是在前端页面JSAPI做权限验证配置的时候需要使用的
++     * 具体信息请查看开发者文档--权限验证配置
++     */
++    public  String getAccessToken() throws ApiException {
++
++        long curTime = System.currentTimeMillis();
++        Cache accessTokenCache = cacheManager.getCache(Constants.ACCESS_TOKEN);
++        Cache.ValueWrapper valueWrapper =  accessTokenCache.get(environment.getProperty("dingtalk.CORP_ID"));
++        String accToken = "";
++        if (valueWrapper==null) {
++            DefaultDingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/gettoken");
++            OapiGettokenRequest request = new OapiGettokenRequest();
++            request.setCorpid(environment.getProperty("dingtalk.CORP_ID"));
++            request.setCorpsecret(environment.getProperty("dingtalk.CORP_SECRET"));
++            request.setHttpMethod("GET");
++            OapiGettokenResponse response = client.execute(request);
++            accToken=response.getAccessToken();
++            JSONObject jsontemp = new JSONObject();
++            jsontemp.clear();
++            jsontemp.put("access_token", accToken);
++            jsontemp.put("begin_time", curTime);
++            cacheManager.getCache(Constants.ACCESS_TOKEN).put(environment.getProperty("dingtalk.CORP_ID"), jsontemp);
++        } else {
++            JSONObject accessTokenValue =  (JSONObject) valueWrapper.get();
++            return accessTokenValue.getString("access_token");
++        }
++        return accToken;
++    }
++
++    /**
++     * 获取JSTicket, 用于js的签名计算
++     * 正常的情况下，jsapi_ticket的有效期为7200秒，所以开发者需要在某个地方设计一个定时器，定期去更新jsapi_ticket
++     */
++    public  String getJsapiTicket(String accessToken) throws ApiException {
++
++//        JSONObject jsTicketValue = (JSONObject) FileUtils.getValue("jsticket", environment.getProperty("dingtalk.CORP_ID"));
++
++        Cache jsTicketCache = cacheManager.getCache(Constants.JSAPI_TICKET);
++        Cache.ValueWrapper valueWrapper =  jsTicketCache.get(environment.getProperty("dingtalk.CORP_ID"));
++        long curTime = System.currentTimeMillis();
++        String jsTicket = "";
++
++        if (valueWrapper == null) {
++            DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/get_jsapi_ticket");
++            OapiGetJsapiTicketRequest req = new OapiGetJsapiTicketRequest();
++            req.setHttpMethod("GET");
++            OapiGetJsapiTicketResponse rsp = client.execute(req, accessToken);
++            if(rsp.getErrcode()==0){
++                jsTicketCache.put(environment.getProperty("dingtalk.CORP_ID"),rsp);
++                return rsp.getTicket();
++            }else{
++                throw new ApiException(rsp.getErrmsg());
++            }
++        } else {
++            OapiGetJsapiTicketResponse rsp =  (OapiGetJsapiTicketResponse) valueWrapper.get();
++            return rsp.getTicket();
++        }
++    }
++
++
++    public static String sign(String ticket, String nonceStr, long timeStamp, String url) throws DingTalkEncryptException {
++        return DingTalkJsApiSingnature.getJsApiSingnature(url, nonceStr, timeStamp, ticket);
++    }
++
++
++    /**
++     * 计算当前请求的jsapi的签名数据<br/>
++     * <p>
++     * 如果签名数据是通过ajax异步请求的话，签名计算中的url必须是给用户展示页面的url
++     *
++     * @param request
++     * @return
++     */
++    public  String getConfig(HttpServletRequest request)  {
++        String urlString = request.getRequestURL().toString();
++        String queryString = request.getQueryString();
++
++        String queryStringEncode = null;
++        String url;
++        if (queryString != null) {
++            queryStringEncode = URLDecoder.decode(queryString);
++            url = urlString + "?" + queryStringEncode;
++        } else {
++            url = urlString;
++        }
++
++        String nonceStr = "abcdefg";
++        long timeStamp = System.currentTimeMillis() / 1000;
++        String signedUrl = url;
++        String accessToken = null;
++        String ticket = null;
++        String signature = null;
++        String agentid = null;
++
++        try {
++            accessToken = getAccessToken();
++            ticket = getJsapiTicket(accessToken);
++            signature = DingtalkAuthService.sign(ticket, nonceStr, timeStamp, signedUrl);
++            agentid = "";
++        } catch (ApiException e) {
++            e.printStackTrace();
++        } catch (DingTalkEncryptException e) {
++            e.printStackTrace();
++        }
++        String configValue = "{jsticket:'" + ticket + "',signature:'" + signature + "',nonceStr:'" + nonceStr + "',timeStamp:'"
++                + timeStamp + "',corpId:'" + environment.getProperty("dingtalk.CORP_ID") + "',agentid:'" + agentid + "'}";
++        return configValue;
++    }
++
++
++    public DingTalkJssdkConfig getConfig(String url) throws ApiException, DingTalkEncryptException {
++        String agentid = environment.getProperty("dingtalk.agentid");
++        return getConfig(url,agentid);
++    }
++
++    public DingTalkJssdkConfig getConfig(String url,String agentid) throws ApiException, DingTalkEncryptException {
++        String nonceStr = "abcdefg";
++        long timeStamp = System.currentTimeMillis() / 1000;
++        String signedUrl = url;
++        String accessToken = null;
++        String ticket = null;
++        String signature = null;
++
++        accessToken = getAccessToken();
++        ticket = getJsapiTicket(accessToken);
++        signature = DingtalkAuthService.sign(ticket, nonceStr, timeStamp, signedUrl);
++
++        DingTalkJssdkConfig config =new DingTalkJssdkConfig();
++        config.setAgentid(agentid);
++        config.setCorpId(environment.getProperty("dingtalk.CORP_ID"));
++        config.setJsticket(ticket);
++        config.setSignature(signature);
++        config.setNonceStr(nonceStr);
++        config.setTimeStamp(timeStamp);
++        return config;
++    }
++
++    public  String getSsoToken() throws ApiException {
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/sso/gettoken");
++        OapiSsoGettokenRequest rqs = new OapiSsoGettokenRequest();
++        rqs.setCorpid(environment.getProperty("dingtalk.CORP_ID"));
++        rqs.setCorpsecret(environment.getProperty("dingtalk.SSO_Secret"));
++        rqs.setHttpMethod("GET");
++        OapiSsoGettokenResponse rsp = client.execute(rqs);
++        if(rsp.getErrcode()==0){
++            return rsp.getAccessToken();
++        }else {
++            throw new ApiException(rsp.getMessage());
++        }
++
++    }
++
++
++
++
++
++}
+Index: src/main/java/com/lazulite/ai/dingtalk/user/User.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/dingtalk/user/User.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/dingtalk/user/User.java	(date 1574064629000)
+@@ -0,0 +1,43 @@
++package com.lazulite.ai.dingtalk.user;
++
++import com.alibaba.fastjson.JSONObject;
++
++import java.util.List;
++
++public class User {
++	public String userid;
++	public String name;
++	public boolean active;
++	public String avatar;
++	public List<Long> department;
++	public String position;
++	public String mobile;
++	public String tel;
++	public String workPlace;
++	public String remark;
++	public String email;
++	public String jobnumber;
++	public JSONObject extattr;
++	public boolean isAdmin;
++	public boolean isBoss;
++	public String dingId;
++
++
++
++	public User() {
++	}
++
++	public User(String userid, String name) {
++		this.userid = userid;
++		this.name = name;
++	}
++
++	@Override
++	public String toString() {
++		List<User> users;
++		return "User[userid:" + userid + ", name:" + name + ", active:" + active + ", "
++				+ "avatar:" + avatar + ", department:" + department +
++				", position:" + position + ", mobile:" + mobile + ", email:" + email +
++				", extattr:" + extattr;
++	}
++}
+Index: src/main/java/com/lazulite/ai/dingtalk/user/DingtalkUserService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/dingtalk/user/DingtalkUserService.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/dingtalk/user/DingtalkUserService.java	(date 1574064629000)
+@@ -0,0 +1,207 @@
++package com.lazulite.ai.dingtalk.user;
++
++
++import com.dingtalk.api.DefaultDingTalkClient;
++import com.dingtalk.api.DingTalkClient;
++import com.dingtalk.api.request.*;
++import com.dingtalk.api.response.*;
++import com.lazulite.ai.dingtalk.auth.DingtalkAuthService;
++import com.taobao.api.ApiException;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.core.env.Environment;
++import org.springframework.stereotype.Component;
++
++/**
++ * 通讯录成员相关的接口调用
++ */
++@Component
++public class DingtalkUserService {
++
++    private final Logger log = LoggerFactory.getLogger(DingtalkUserService.class);
++
++    @Autowired
++    Environment environment;
++
++    @Autowired
++    DingtalkAuthService dingtalkAuthService;
++
++
++
++
++    /**
++     * 根据免登授权码查询免登用户userId
++     *
++     * @param code
++     * @return
++     * @throws ApiException
++     */
++    public OapiUserGetuserinfoResponse getUserInfo(String code) throws ApiException {
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/user/getuserinfo");
++        OapiUserGetuserinfoRequest request = new OapiUserGetuserinfoRequest();
++        request.setCode(code);
++        request.setHttpMethod("GET");
++        return  client.execute(request,dingtalkAuthService.getAccessToken());
++    }
++    /**
++     * 创建企业成员
++     * <p>
++     * https://open-doc.dingtalk.com/docs/doc.htm?treeId=385&articleId=106816&docType=1#s1
++     */
++    public OapiUserCreateResponse createUser(OapiUserCreateRequest request) throws ApiException {
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/user/create");
++        OapiUserCreateResponse response = client.execute(request, dingtalkAuthService.getAccessToken());
++        return response;
++    }
++
++
++    /**
++     * 更新成员
++     * <p>
++     * https://open-doc.dingtalk.com/docs/doc.htm?treeId=385&articleId=106816&docType=1#s2
++     */
++    public OapiUserUpdateResponse updateUser(OapiUserUpdateRequest request) throws ApiException {
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/user/update");
++        OapiUserUpdateResponse response = client.execute(request, dingtalkAuthService.getAccessToken());
++        return response;
++    }
++
++
++    /**
++     * 删除成员
++     */
++    public OapiUserDeleteResponse deleteUser(OapiUserDeleteRequest request) throws ApiException {
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/user/delete");
++        return client.execute(request, dingtalkAuthService.getAccessToken());
++    }
++
++
++    //获取成员
++    public OapiUserGetResponse getUser(String userId) throws ApiException {
++
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/user/get");
++        OapiUserGetRequest request = new OapiUserGetRequest();
++        request.setUserid(userId);
++        request.setHttpMethod("GET");
++        return client.execute(request, dingtalkAuthService.getAccessToken());
++
++
++    }
++
++
++
++
++
++
++    //批量删除成员
++    public OapiUserBatchdeleteResponse batchDeleteUser(OapiUserBatchdeleteRequest request)
++        throws ApiException {
++
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/user/batchdelete");
++        return client.execute(request, dingtalkAuthService.getAccessToken());
++
++    }
++
++
++    //获取部门成员
++    public OapiUserSimplelistResponse getDepartmentUser(
++            String accessToken,
++            Long departmentId,
++            Long offset,
++            Long size,
++            String order)
++            throws ApiException {
++
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/user/simplelist");
++        OapiUserSimplelistRequest request = new OapiUserSimplelistRequest();
++        request.setDepartmentId(departmentId);
++        request.setOffset(offset);
++        request.setSize(size);
++        request.setOrder(order);
++        request.setHttpMethod("GET");
++        return client.execute(request, accessToken);
++
++    }
++
++    //获取部门成员
++    public OapiUserListbypageResponse getListbypage(
++        String accessToken,
++        Long departmentId,
++        Long offset,
++        Long size)
++        throws ApiException {
++
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/user/listbypage");
++        OapiUserListbypageRequest request = new OapiUserListbypageRequest();
++        request.setDepartmentId(departmentId);
++        request.setOffset(offset);
++        request.setSize(size);
++        request.setOrder("entry_desc");
++        request.setHttpMethod("GET");
++        return   client.execute(request,accessToken);
++
++
++    }
++
++
++
++
++
++    //获取部门成员（userId）
++    public OapiUserGetDeptMemberResponse getDeptMember(Long deptId)
++        throws ApiException {
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/user/getDeptMember");
++        OapiUserGetDeptMemberRequest req = new OapiUserGetDeptMemberRequest();
++        req.setDeptId(deptId+"");
++        req.setHttpMethod("GET");
++        return client.execute(req, dingtalkAuthService.getAccessToken());
++    }
++
++
++    //获取部门成员（简洁）
++    public OapiUserSimplelistResponse simplelist(Long deptId, Long offset , Long size)
++        throws ApiException {
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/user/simplelist");
++        OapiUserSimplelistRequest request = new OapiUserSimplelistRequest();
++        request.setDepartmentId(deptId);
++        request.setOffset(offset);
++        request.setSize(size);
++        request.setHttpMethod("GET");
++        return client.execute(request, dingtalkAuthService.getAccessToken());
++
++    }
++
++
++    //获取部门成员（详情）
++    public OapiUserListResponse list(Long deptId, Long offset , Long size)
++            throws ApiException {
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/user/list");
++        OapiUserListRequest request = new OapiUserListRequest();
++        request.setDepartmentId(deptId);
++        request.setOffset(offset);
++        request.setSize(size);
++        request.setHttpMethod("GET");
++        return  client.execute(request, dingtalkAuthService.getAccessToken());
++
++    }
++
++
++    /**
++     * 管理后台免登时通过CODE换取微应用管理员的身份信息
++     *
++     * @return
++     */
++    public OapiSsoGetuserinfoResponse getAgentUserInfo(String code) throws ApiException {
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/sso/getuserinfo");
++        OapiSsoGetuserinfoRequest request =new OapiSsoGetuserinfoRequest();
++        request.setCode(code);
++        request.setHttpMethod("GET");
++        return client.execute(request, dingtalkAuthService.getSsoToken());
++    }
++
++
++
++
++
++}
+Index: src/main/java/com/lazulite/ai/dingtalk/approval/DingtalkApprovalService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/dingtalk/approval/DingtalkApprovalService.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/dingtalk/approval/DingtalkApprovalService.java	(date 1574064629000)
+@@ -0,0 +1,38 @@
++package com.lazulite.ai.dingtalk.approval;
++
++import com.dingtalk.api.DefaultDingTalkClient;
++import com.dingtalk.api.DingTalkClient;
++import com.dingtalk.api.request.OapiProcessWorkrecordCreateRequest;
++import com.dingtalk.api.response.OapiProcessWorkrecordCreateResponse;
++import com.taobao.api.ApiException;
++
++import java.util.ArrayList;
++import java.util.List;
++
++public class DingtalkApprovalService {
++
++    public static void create(String[] args) {
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/topapi/process/workrecord/create");
++        OapiProcessWorkrecordCreateRequest req = new OapiProcessWorkrecordCreateRequest();
++        OapiProcessWorkrecordCreateRequest.SaveFakeProcessInstanceRequest obj1 = new OapiProcessWorkrecordCreateRequest.SaveFakeProcessInstanceRequest();
++        obj1.setAgentid(111L);
++        obj1.setProcessCode("proc");
++        obj1.setOriginatorUserId("manager");
++        List<OapiProcessWorkrecordCreateRequest.FormComponentValueVo> list3 = new ArrayList<OapiProcessWorkrecordCreateRequest.FormComponentValueVo>();
++        OapiProcessWorkrecordCreateRequest.FormComponentValueVo obj4 = new OapiProcessWorkrecordCreateRequest.FormComponentValueVo();
++        list3.add(obj4);
++        obj4.setName("name");
++        obj4.setValue("value");
++        obj4.setExtValue("ext");
++        obj1.setFormComponentValues(list3);
++        obj1.setUrl("http://www.dingtalk.com");
++        req.setRequest(obj1);
++        OapiProcessWorkrecordCreateResponse rsp = null;
++        try {
++            rsp = client.execute(req, "4fd2ad652a72386987d5d3b6f7325c81");
++        } catch (ApiException e) {
++            e.printStackTrace();
++        }
++        System.out.println(rsp.getBody());
++    }
++}
+Index: src/main/java/com/lazulite/ai/dingtalk/department/DingtalkDeptService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/dingtalk/department/DingtalkDeptService.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/dingtalk/department/DingtalkDeptService.java	(date 1574064629000)
+@@ -0,0 +1,205 @@
++package com.lazulite.ai.dingtalk.department;
++
++import com.alibaba.fastjson.JSON;
++import com.dingtalk.api.DefaultDingTalkClient;
++import com.dingtalk.api.DingTalkClient;
++import com.dingtalk.api.request.*;
++import com.dingtalk.api.response.*;
++import com.lazulite.ai.dingtalk.auth.DingtalkAuthService;
++import com.lazulite.ai.toolbox.service.ApiInvokeService;
++import com.taobao.api.ApiException;
++import org.apache.commons.lang3.StringUtils;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.core.env.Environment;
++import org.springframework.stereotype.Component;
++
++import java.util.Collections;
++import java.util.List;
++import java.util.stream.Collectors;
++
++/**
++ * 部门相关API
++ *
++ * https://open-doc.dingtalk.com/docs/doc.htm?treeId=371&articleId=106817&docType=1
++ */
++@Component
++public class DingtalkDeptService {
++
++    private final Logger log = LoggerFactory.getLogger(DingtalkDeptService.class);
++
++    @Autowired
++    DingtalkAuthService dingtalkAuthService;
++
++    @Autowired
++    Environment environment;
++
++    @Autowired
++    ApiInvokeService apiInvokeService;
++
++    /**
++     *  创建部门
++     */
++    public OapiDepartmentCreateResponse createDepartment(String name,
++                                                         String parentId, String order, boolean createDeptGroup) throws ApiException {
++
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/department/create");
++        OapiDepartmentCreateRequest request = new OapiDepartmentCreateRequest();
++        request.setParentid(parentId);
++        request.setCreateDeptGroup(createDeptGroup);
++        request.setOrder(order);
++        request.setName(name);
++        OapiDepartmentCreateResponse response = client.execute(request, dingtalkAuthService.getAccessToken());
++        return response;
++    }
++
++    /**
++     * 获取部门列表
++     */
++    public OapiDepartmentListResponse listDepartments(Long parentDeptId) throws ApiException {
++
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/department/list");
++        OapiDepartmentListRequest request = new OapiDepartmentListRequest();
++        request.setId(parentDeptId+"");
++        request.setHttpMethod("GET");
++        OapiDepartmentListResponse response = client.execute(request, dingtalkAuthService.getAccessToken());
++        return response;
++
++    }
++
++
++    /**
++     * 删除部门
++     */
++    public OapiDepartmentDeleteResponse deleteDepartment(Long id) throws ApiException {
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/department/delete");
++        OapiDepartmentDeleteRequest request = new OapiDepartmentDeleteRequest();
++        request.setId("123");
++        request.setHttpMethod("GET");
++        OapiDepartmentDeleteResponse response = client.execute(request, dingtalkAuthService.getAccessToken());
++        return response;
++    }
++
++    /**
++     * 更新部门
++     */
++    public OapiDepartmentUpdateResponse updateDepartment(Long id, String name,
++                                                         String parentId, String order, Boolean createDeptGroup,
++                                                         boolean autoAddUser, String deptManagerUseridList, boolean deptHiding, String deptPerimits,
++                                                         String userPerimits, Boolean outerDept, String outerPermitDepts,
++                                                         String outerPermitUsers, String orgDeptOwner) throws ApiException {
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/department/update");
++        OapiDepartmentUpdateRequest request = new OapiDepartmentUpdateRequest();
++        request.setId(id);
++        request.setParentid(parentId);
++        request.setOrder(order);
++        request.setName(name);
++        request.setCreateDeptGroup(createDeptGroup);
++        request.setAutoAddUser(autoAddUser);
++        request.setDeptManagerUseridList(deptManagerUseridList);
++        request.setDeptHiding(deptHiding);
++        request.setDeptPerimits(deptPerimits);
++        request.setUserPerimits(userPerimits);
++        request.setOuterDept(outerDept);
++        request.setOuterPermitDepts(outerPermitDepts);
++        request.setOuterPermitUsers(outerPermitUsers);
++        request.setOrgDeptOwner(orgDeptOwner);
++        OapiDepartmentUpdateResponse response = client.execute(request, dingtalkAuthService.getAccessToken());
++        return response;
++
++    }
++
++    /**
++     * 更新部门
++     */
++    public OapiDepartmentUpdateResponse updateDepartment(OapiDepartmentUpdateRequest request) throws ApiException {
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/department/update");
++        OapiDepartmentUpdateResponse response = client.execute(request, dingtalkAuthService.getAccessToken());
++        return response;
++
++    }
++
++//    /**
++//     * 更新部门
++//     */
++//    public  void updateDepartment(DingTalkDepartment detail) throws Exception {
++//        CorpDepartmentService corpDepartmentService = ServiceFactory.getInstance().getOpenService(CorpDepartmentService.class);
++//        corpDepartmentService.deptUpdate(authHelper.getAccessToken(), detail.getId(), detail.getName(), detail.getParentid(), detail.getOrder(), detail.isCreateDeptGroup(),
++//            detail.isAutoAddUser(), detail.getDeptManagerUseridList(),  detail.isDeptHiding(),  detail.getDeptPerimits(), detail.getUserPerimits() ,
++//            detail.isOuterDept() , detail.getOuterPermitDepts(), detail.getOuterPermitUsers() , detail.getOrgDeptOwner());
++//
++//    }
++
++
++    /**
++     * 更新部门是否隐藏状态
++     */
++    public  Boolean updateDepartmentDeptHiding(Long id,Boolean isDeptHiding) throws ApiException {
++        OapiDepartmentUpdateRequest request  =new OapiDepartmentUpdateRequest();
++        request.setId(id);
++        request.setDeptHiding(isDeptHiding);
++        OapiDepartmentUpdateResponse rsp = updateDepartment(request);
++        if(log.isInfoEnabled()){
++            OapiDepartmentGetResponse departmentDetail = this.getDeptDetailBySdk(id);
++            log.info("更新钉钉部门信息，入参数：dept:{},isDeptHiding:{} ,出参:{}" , JSON.toJSONString(departmentDetail),isDeptHiding, JSON.toJSONString(rsp));
++        }
++        if(rsp.getErrcode()==0){
++           return Boolean.TRUE;
++        }else{
++            log.error("更新钉钉部门隐藏状态时出错："+id);
++        }
++        return Boolean.FALSE;
++    }
++
++
++
++
++
++
++    /**
++     * 获取部门详情
++     */
++    public OapiDepartmentGetResponse getDeptDetailBySdk(Long id) throws ApiException {
++
++
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/department/get");
++        OapiDepartmentGetRequest request = new OapiDepartmentGetRequest();
++        request.setId(id+"");
++        request.setHttpMethod("GET");
++        OapiDepartmentGetResponse response = client.execute(request, dingtalkAuthService.getAccessToken());
++        log.debug("获取部门信息：{}",JSON.toJSONString(response));
++        return response;
++
++    }
++
++    public List<Long> listParentDeptsByDept(Long id) throws ApiException {
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/department/list_parent_depts_by_dept");
++        OapiDepartmentListParentDeptsByDeptRequest request = new OapiDepartmentListParentDeptsByDeptRequest();
++        request.setId(id+"");
++        request.setHttpMethod("GET");
++        OapiDepartmentListParentDeptsByDeptResponse response = client.execute(request, dingtalkAuthService.getAccessToken());
++        if(response.isSuccess()){
++            return response.getParentIds();
++        }
++        return null;
++    }
++
++    public String listParentNameDeptsByDept(Long id) throws ApiException {
++        List<Long> ids =  listParentDeptsByDept(id);
++        Collections.reverse(ids);
++        List<String> names = ids.stream().map(aLong -> {
++            try {
++                return getDeptDetailBySdk(aLong).getName();
++            } catch (ApiException e) {
++                e.printStackTrace();
++            }
++            return "";
++        }).collect(Collectors.toList());
++       return StringUtils.join(names,"->");
++    }
++
++
++
++
++}
+Index: src/main/java/com/lazulite/ai/dingtalk/eventchange/eventChangeHelper.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/dingtalk/eventchange/eventChangeHelper.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/dingtalk/eventchange/eventChangeHelper.java	(date 1574064629000)
+@@ -0,0 +1,81 @@
++package com.lazulite.ai.dingtalk.eventchange;
++
++
++import com.alibaba.fastjson.JSONObject;
++import com.lazulite.ai.toolbox.service.ApiInvokeService;
++import com.lazulite.ai.toolbox.service.HttpResultDTO;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.core.env.Environment;
++
++import java.io.IOException;
++import java.util.List;
++
++/**
++ * 通讯录回调相关事件
++ * <p>
++ * https://open-doc.dingtalk.com/docs/doc.htm?treeId=371&articleId=104975&docType=1
++ */
++public class eventChangeHelper {
++
++    @Autowired
++    private Environment environment;
++
++    @Autowired
++    ApiInvokeService apiInvokeService;
++
++    String OAPI_HOST= environment.getProperty("dingtalk.OAPI_HOST");
++
++    /**
++     * 注册事件回调接口
++     */
++    public HttpResultDTO registerEventChange(String accessToken, List<String> callBackTag, String token, String aesKey, String url) throws  IOException {
++        String signUpUrl = OAPI_HOST + "/call_back/register_call_back?" +
++                "access_token=" + accessToken;
++        JSONObject args = new JSONObject();
++        args.put("call_back_tag", callBackTag);
++        args.put("token", token);
++        args.put("aes_key", aesKey);
++        args.put("url", url);
++        HttpResultDTO dto = apiInvokeService.doPost(signUpUrl,args);
++//        JSONObject response = HttpHelper.httpPost(signUpUrl, args);
++        return dto;
++    }
++
++    //查询事件回调接口
++    public  String getEventChange(String accessToken) throws IOException {
++        String url = OAPI_HOST + "/call_back/get_call_back?" +
++                "access_token=" + accessToken;
++        return apiInvokeService.doGet(url);
++    }
++
++    //更新事件回调接口
++    public  HttpResultDTO updateEventChange(String accessToken, List<String> callBackTag, String token, String aesKey, String url) throws  IOException {
++        String signUpUrl = OAPI_HOST + "/call_back/update_call_back?" +
++                "access_token=" + accessToken;
++        JSONObject args = new JSONObject();
++        args.put("call_back_tag", callBackTag);
++        args.put("token", token);
++        args.put("aes_key", aesKey);
++        args.put("url", url);
++
++        HttpResultDTO response = apiInvokeService.doPost(signUpUrl, args);
++        return response;
++
++    }
++
++    //删除事件回调接口
++    public  String deleteEventChange(String accessToken) throws IOException {
++        String url = OAPI_HOST + "/call_back/delete_call_back?" +
++                "access_token=" + accessToken;
++        return apiInvokeService.doGet(url);
++    }
++
++
++    public  String getFailedResult(String accessToken) throws IOException {
++        String url = OAPI_HOST + "/call_back/get_call_back_failed_result?" +
++                "access_token=" + accessToken;
++        return apiInvokeService.doGet(url);
++    }
++
++
++}
+Index: src/main/java/com/lazulite/ai/domain/ProcessMsgSubTask.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/domain/ProcessMsgSubTask.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/java/com/lazulite/ai/domain/ProcessMsgSubTask.java	(date 1574071166000)
+@@ -21,7 +21,7 @@
+     @GeneratedValue(strategy = GenerationType.IDENTITY)
+     private Long id;
+ 
+-    @Column(name = "userid_list")
++    @Column(name = "userid_list",columnDefinition = "text")
+     private String useridList;
+ 
+     @Column(name = "task_id")
+Index: src/main/java/com/lazulite/ai/web/rest/CallbackResource.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/web/rest/CallbackResource.java	(date 1574145804000)
++++ src/main/java/com/lazulite/ai/web/rest/CallbackResource.java	(date 1574145804000)
+@@ -0,0 +1,324 @@
++package com.lazulite.ai.web.rest;
++
++import com.alibaba.fastjson.JSON;
++import com.alibaba.fastjson.JSONArray;
++import com.alibaba.fastjson.JSONObject;
++import com.alibaba.fastjson.serializer.SerializeConfig;
++import com.dingtalk.api.DefaultDingTalkClient;
++import com.dingtalk.api.DingTalkClient;
++import com.dingtalk.api.request.*;
++import com.dingtalk.api.response.OapiCallBackGetCallBackFailedResultResponse;
++import com.dingtalk.api.response.OapiCallBackGetCallBackResponse;
++import com.dingtalk.api.response.OapiCallBackRegisterCallBackResponse;
++import com.dingtalk.api.response.OapiProcessinstanceGetResponse;
++import com.lazulite.ai.dingtalk.Constant;
++import com.lazulite.ai.dingtalk.MessageUtil;
++import com.lazulite.ai.dingtalk.URLConstant;
++import com.lazulite.ai.dingtalk.aes.DingTalkEncryptor;
++import com.lazulite.ai.dingtalk.aes.Utils;
++import com.lazulite.ai.dingtalk.auth.DingtalkAuthService;
++import com.lazulite.ai.domain.*;
++import com.lazulite.ai.domain.enumeration.DdMessageType;
++import com.lazulite.ai.domain.enumeration.MessageStatus;
++import com.lazulite.ai.repository.*;
++import com.lazulite.ai.toolbox.util.DateUtils;
++import com.taobao.api.ApiException;
++import org.apache.commons.compress.utils.Lists;
++import org.apache.commons.lang3.StringUtils;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++import org.springframework.beans.BeanUtils;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.core.env.Environment;
++import org.springframework.transaction.annotation.Transactional;
++import org.springframework.web.bind.annotation.*;
++
++import javax.annotation.Resource;
++import java.time.Instant;
++import java.util.Arrays;
++import java.util.List;
++import java.util.Map;
++import java.util.Optional;
++
++/**
++ * E应用回调信息处理
++ */
++@RestController
++public class CallbackResource {
++
++    private static final Logger bizLogger = LoggerFactory.getLogger("BIZ_CALLBACKCONTROLLER");
++    private static final Logger mainLogger = LoggerFactory.getLogger(CallbackResource.class);
++
++    /**
++     * 创建套件后，验证回调URL创建有效事件（第一次保存回调URL之前）
++     */
++    private static final String CHECK_URL = "check_url";
++
++    private static final String accessToken = "";
++
++    /**
++     * 审批任务回调
++     */
++    private static final String BPMS_TASK_CHANGE = "bpms_task_change";
++
++    /**
++     * 审批实例回调
++     */
++    private static final String BPMS_INSTANCE_CHANGE = "bpms_instance_change";
++
++    /**
++     * 相应钉钉回调时的值
++     */
++    private static final String CALLBACK_RESPONSE_SUCCESS = "success";
++
++
++    @Resource(name = "snakeCaseSerializeConfig")
++    private SerializeConfig snakeCaseSerializeConfig;
++
++
++    @Autowired
++    DingtalkAuthService dingtalkAuthService;
++
++    @Autowired
++    MessageUtil messageUtil;
++
++    @Autowired
++    ProcessTemplateRepository processTemplateRepository;
++
++    @Autowired
++    ProcessInstanceRepository processInstanceRepository;
++
++    @Autowired
++    FormComponentValuesRepository formComponentValuesRepository;
++
++    @Autowired
++    ProcessInstanceEventRepository processInstanceEventRepository;
++
++    @Autowired
++    ProcessMsgTaskRepository processMsgTaskRepository;
++
++    @Autowired
++    Environment env;
++
++
++    @RequestMapping(value = "/callback", method = RequestMethod.POST)
++    @ResponseBody
++    @Transactional
++    public Map<String, String> callback(@RequestParam(value = "signature", required = false) String signature,
++                                        @RequestParam(value = "timestamp", required = false) String timestamp,
++                                        @RequestParam(value = "nonce", required = false) String nonce,
++                                        @RequestBody(required = false) JSONObject json) {
++        String params = " signature:"+signature + " timestamp:"+timestamp +" nonce:"+nonce+" json:"+json;
++        try {
++            DingTalkEncryptor dingTalkEncryptor = new DingTalkEncryptor(Constant.TOKEN, Constant.ENCODING_AES_KEY,
++                Constant.CORP_ID);
++
++            //从post请求的body中获取回调信息的加密数据进行解密处理
++            String encryptMsg = json.getString("encrypt");
++            String plainText = dingTalkEncryptor.getDecryptMsg(signature, timestamp, nonce, encryptMsg);
++            JSONObject obj = JSON.parseObject(plainText);
++
++
++
++
++
++            //根据回调数据类型做不同的业务处理
++            String eventType = obj.getString("EventType");
++            if (BPMS_TASK_CHANGE.equals(eventType)) {
++                bizLogger.info("收到审批任务进度更新: " + plainText);
++                //todo: 实现审批的业务逻辑，如发消息
++            } else if (BPMS_INSTANCE_CHANGE.equals(eventType)) {
++                //解密成功，保存事件
++
++                bizLogger.info("收到审批实例状态更新: " + plainText);
++                //todo: 实现审批的业务逻辑，如发消息
++
++
++
++                if (obj.containsKey("result") && obj.getString("result").equals("agree")) {
++
++                    String processCode = obj.getString("processCode");
++                    String processInstanceId = obj.getString("processInstanceId");
++
++                    Optional<ProcessTemplate> processTemplateOptional = processTemplateRepository.findFirstByProcessCode(processCode);
++                    ProcessTemplate processTemplate = new ProcessTemplate();
++                    if(processTemplateOptional.isPresent()){
++                        processTemplate = processTemplateOptional.get();
++                    }else{
++                        processTemplate.setName("system-generator");
++                        processTemplate.setProcessCode(processCode);
++                        processTemplateRepository.save(processTemplate);
++                    }
++                    ProcessInstance processInstance = new ProcessInstance();
++                    Optional<ProcessInstance> processInstanceOptional = processInstanceRepository.findById(processInstanceId);
++                    if(processInstanceOptional.isPresent()){
++                        processInstance = processInstanceOptional.get();
++                    }else{
++                        processInstance.setId(processInstanceId);
++                    }
++
++                    DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/topapi/processinstance/get");
++                    OapiProcessinstanceGetRequest request = new OapiProcessinstanceGetRequest();
++                    request.setProcessInstanceId(processInstanceId);
++                    OapiProcessinstanceGetResponse response = client.execute(request,dingtalkAuthService.getAccessToken());
++                    OapiProcessinstanceGetResponse.ProcessInstanceTopVo processInstanceVo = response.getProcessInstance();
++                    BeanUtils.copyProperties(processInstanceVo,processInstance);
++                    processInstance.setProcessTemplate(processTemplate);
++                    processInstanceRepository.save(processInstance);
++
++
++                    ProcessInstanceEvent processInstanceEvent = new ProcessInstanceEvent();
++                    processInstanceEvent.setBizCategoryId(obj.getString("bizCategoryId"));
++                    if(obj.getLong("finishTime")!=null){
++                        processInstanceEvent.setFinishTime(Instant.ofEpochMilli(obj.getLong("finishTime")));
++                    }
++                    processInstanceEvent.setCorpId(obj.getString("corpId"));
++                    processInstanceEvent.setEventType(obj.getString("EventType"));
++                    processInstanceEvent.setBusinessId(obj.getString("businessId"));
++                    processInstanceEvent.setTitle(obj.getString("title"));
++                    processInstanceEvent.setUrl(obj.getString("url"));
++                    processInstanceEvent.setResult(obj.getString("result"));
++                    processInstanceEvent.setCreateTime(obj.getString("createTime"));
++                    processInstanceEvent.setProcessCode(obj.getString("processCode"));
++                    processInstanceEvent.setStaffId(obj.getString("staffId"));
++                    processInstanceEvent.setProcessInstance(processInstance);
++                    processInstanceEventRepository.save(processInstanceEvent);
++
++                    for (OapiProcessinstanceGetResponse.FormComponentValueVo formComponentValueVo : processInstanceVo.getFormComponentValues()) {
++                        FormComponentValues formComponentValues = new FormComponentValues();
++                        BeanUtils.copyProperties(formComponentValueVo,formComponentValues);
++                        formComponentValues.setId(processInstanceId+"."+formComponentValueVo.getId());
++                        formComponentValues.setProcessInstance(processInstance);
++                        processInstance.addFormComponentValues(formComponentValues);
++                        formComponentValuesRepository.save(formComponentValues);
++                    }
++
++
++                    if(processCode.equals("PROC-C5378F0A-C36A-4F69-A651-91B49236B2D8")){
++                        ProcessMsgTask task = new ProcessMsgTask();
++//                        task.setJson(plainText);
++                        task.setAgentId(Long.valueOf(env.getProperty("dingtalk.agentid")));
++                        task.setType(DdMessageType.ActionCard);
++                        task.setProcessInstance(processInstance);
++                        task.setStatus(MessageStatus.NotSentYet);
++                        task.toAllUser(Boolean.FALSE);
++                        OapiMessageCorpconversationAsyncsendV2Request.Msg msg = new OapiMessageCorpconversationAsyncsendV2Request.Msg();
++                        msg.setActionCard(new OapiMessageCorpconversationAsyncsendV2Request.ActionCard());
++                        msg.setMsgtype("action_card");
++                        String text = "";
++                        String imageUrl = "";
++                        for (FormComponentValues formComponentValue : processInstance.getFormComponentValues()) {
++                            if(formComponentValue.getName()!=null){
++                                if(formComponentValue.getName().equals("发送时间")){
++                                    String value = formComponentValue.getValue();
++                                    Instant instant = DateUtils.stringToInstant(value, "yyyy-MM-dd hh:mm");
++                                    task.setExecuteTime(instant);
++                                    System.out.println("发送时间："+ value);
++                                }
++                                if(formComponentValue.getName().equals("接收范围")){
++                                    String value = formComponentValue.getExtValue();
++                                    JSONArray objects = JSON.parseArray(value);
++                                    List<String> idList = Lists.newArrayList();
++                                    for (Object object : objects) {
++                                        JSONObject o = (JSONObject)object;
++                                        String id = o.getString("id");
++                                        idList.add(id);
++                                    }
++                                    task.setDeptIdList(String.join(",",idList));
++                                }
++                                if(formComponentValue.getName().equals("消息标题")){
++                                    String value = formComponentValue.getValue();
++                                    msg.getActionCard().setTitle(value);
++
++
++                                }
++                                if(formComponentValue.getName().equals("消息文字")){
++                                    text = formComponentValue.getValue();
++                                }
++                                if(formComponentValue.getName().equals("图片")){
++                                    String value = formComponentValue.getValue();
++                                    JSONArray array = JSON.parseArray(value);
++                                    imageUrl = array.get(0)+"";
++                                }
++                                if(formComponentValue.getName().equals("消息链接")){
++                                    String value = formComponentValue.getValue();
++                                    msg.getActionCard().setSingleUrl(value);
++                                }
++                            }
++                        }
++                        StringBuilder markdown = new StringBuilder();
++                        markdown.append(String.format("![](%s)",imageUrl));
++                        markdown.append(" \n ");
++                        markdown.append(text);
++                        msg.getActionCard().setMarkdown(markdown.toString());
++                        msg.getActionCard().setSingleTitle("查看详情");
++                        task.setMsg(JSON.toJSONString(msg,snakeCaseSerializeConfig));
++                        processMsgTaskRepository.save(task);
++                        messageUtil.sendMessageToOriginator(processInstanceId);
++                    }
++                }
++            } else {
++                // 其他类型事件处理
++            }
++
++            // 返回success的加密信息表示回调处理成功
++            return dingTalkEncryptor.getEncryptedMap(CALLBACK_RESPONSE_SUCCESS, System.currentTimeMillis(), Utils.getRandomStr(8));
++        } catch (Exception e) {
++            //失败的情况，应用的开发者应该通过告警感知，并干预修复
++            mainLogger.error("process callback failed！"+params,e);
++            return null;
++        }
++
++    }
++
++    public static void main1(String[] args) throws Exception{
++        // 先删除企业已有的回调
++        DingTalkClient client = new DefaultDingTalkClient(URLConstant.DELETE_CALLBACK);
++        OapiCallBackDeleteCallBackRequest request = new OapiCallBackDeleteCallBackRequest();
++        request.setHttpMethod("GET");
++        client.execute(request, accessToken);
++
++        // 重新为企业注册回调
++        client = new DefaultDingTalkClient(URLConstant.REGISTER_CALLBACK);
++        OapiCallBackRegisterCallBackRequest registerRequest = new OapiCallBackRegisterCallBackRequest();
++        registerRequest.setUrl(Constant.CALLBACK_URL_HOST + "/callback");
++        registerRequest.setAesKey(Constant.ENCODING_AES_KEY);
++        registerRequest.setToken(Constant.TOKEN);
++        registerRequest.setCallBackTag(Arrays.asList("bpms_instance_change", "bpms_task_change"));
++        OapiCallBackRegisterCallBackResponse registerResponse = client.execute(registerRequest,accessToken);
++        if (registerResponse.isSuccess()) {
++            System.out.println("回调注册成功了！！！");
++        }
++    }
++
++
++    public static void main(String[] args) throws ApiException {
++
++
++        String s = "[\"https://static.dingtalk.com/media/lADPDgQ9rPYFBNfNAefNBD0_1085_487.jpg\"]";
++//        System.out.println(s.substring(2, s.length()-2));
++        JSONArray a = JSON.parseArray(s);
++
++
++        System.out.println(String.format("![](%s)",a.get(0)));
++
++//        Instant instant = DateUtils.stringToInstant("2019-11-18 17:49", "yyyy-MM-dd hh:mm");
++//        System.out.println(instant);
++
++
++
++//        DingTalkClient  client = new DefaultDingTalkClient("https://oapi.dingtalk.com/call_back/get_call_back");
++//        OapiCallBackGetCallBackRequest request = new OapiCallBackGetCallBackRequest();
++//        request.setHttpMethod("GET");
++//        OapiCallBackGetCallBackResponse response = client.execute(request,accessToken);
++//        System.out.println(JSON.toJSONString(response));
++    }
++
++    public static void main2(String[] args) throws ApiException {
++        DingTalkClient  client = new DefaultDingTalkClient("https://oapi.dingtalk.com/call_back/get_call_back_failed_result");
++        OapiCallBackGetCallBackFailedResultRequest request = new OapiCallBackGetCallBackFailedResultRequest();
++        request.setHttpMethod("GET");
++        OapiCallBackGetCallBackFailedResultResponse response = client.execute(request,accessToken);
++        System.out.println(JSON.toJSONString(response));
++    }
++}
+Index: src/main/java/com/lazulite/ai/web/rest/FormComponentValuesResource.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/web/rest/FormComponentValuesResource.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/java/com/lazulite/ai/web/rest/FormComponentValuesResource.java	(date 1574064629000)
+@@ -107,7 +107,7 @@
+      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the formComponentValues, or with status {@code 404 (Not Found)}.
+      */
+     @GetMapping("/form-component-values/{id}")
+-    public ResponseEntity<FormComponentValues> getFormComponentValues(@PathVariable Long id) {
++    public ResponseEntity<FormComponentValues> getFormComponentValues(@PathVariable String id) {
+         log.debug("REST request to get FormComponentValues : {}", id);
+         Optional<FormComponentValues> formComponentValues = formComponentValuesService.findOne(id);
+         return ResponseUtil.wrapOrNotFound(formComponentValues);
+@@ -120,7 +120,7 @@
+      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
+      */
+     @DeleteMapping("/form-component-values/{id}")
+-    public ResponseEntity<Void> deleteFormComponentValues(@PathVariable Long id) {
++    public ResponseEntity<Void> deleteFormComponentValues(@PathVariable String id) {
+         log.debug("REST request to delete FormComponentValues : {}", id);
+         formComponentValuesService.delete(id);
+         return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString())).build();
+Index: src/main/java/com/lazulite/ai/web/rest/ProcessInstanceResource.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/web/rest/ProcessInstanceResource.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/java/com/lazulite/ai/web/rest/ProcessInstanceResource.java	(date 1574064629000)
+@@ -107,7 +107,7 @@
+      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the processInstance, or with status {@code 404 (Not Found)}.
+      */
+     @GetMapping("/process-instances/{id}")
+-    public ResponseEntity<ProcessInstance> getProcessInstance(@PathVariable Long id) {
++    public ResponseEntity<ProcessInstance> getProcessInstance(@PathVariable String id) {
+         log.debug("REST request to get ProcessInstance : {}", id);
+         Optional<ProcessInstance> processInstance = processInstanceService.findOne(id);
+         return ResponseUtil.wrapOrNotFound(processInstance);
+@@ -120,7 +120,7 @@
+      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
+      */
+     @DeleteMapping("/process-instances/{id}")
+-    public ResponseEntity<Void> deleteProcessInstance(@PathVariable Long id) {
++    public ResponseEntity<Void> deleteProcessInstance(@PathVariable String id) {
+         log.debug("REST request to delete ProcessInstance : {}", id);
+         processInstanceService.delete(id);
+         return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString())).build();
+Index: src/main/webapp/app/home/home.component.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/webapp/app/home/home.component.html	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/webapp/app/home/home.component.html	(date 1574064629000)
+@@ -1,41 +1,3 @@
+ <div class="row">
+-    <div class="col-md-3">
+-        <span class="hipster img-fluid rounded"></span>
+-    </div>
+-    <div class="col-md-9">
+-        <h1 class="display-4" jhiTranslate="home.title">Welcome, Java Hipster!</h1>
+-        <p class="lead" jhiTranslate="home.subtitle">This is your homepage</p>
+-
+-        <div [ngSwitch]="isAuthenticated()">
+-            <div class="alert alert-success" *ngSwitchCase="true">
+-                <span id="home-logged-message" *ngIf="account" jhiTranslate="home.logged.message"
+-                    [translateValues]="{username: account.login}"> You are logged in as user "{{account.login}}". </span>
+-            </div>
+-
+-            <div class="alert alert-warning" *ngSwitchCase="false">
+-                <span jhiTranslate="global.messages.info.authenticated.prefix">If you want to </span>
+-                <a class="alert-link" (click)="login()" jhiTranslate="global.messages.info.authenticated.link">sign in</a><span jhiTranslate="global.messages.info.authenticated.suffix">, you can try the default accounts:<br/>- Administrator (login="admin" and password="admin") <br/>- User (login="user" and password="user").</span>
+-            </div>
+-            <div class="alert alert-warning" *ngSwitchCase="false">
+-                <span jhiTranslate="global.messages.info.register.noaccount">You don't have an account yet?</span>&nbsp;
+-                <a class="alert-link" routerLink="account/register" jhiTranslate="global.messages.info.register.link">Register a new account</a>
+-            </div>
+-        </div>
+-
+-        <p jhiTranslate="home.question">
+-            If you have any question on JHipster:
+-        </p>
+ 
+-        <ul>
+-            <li><a href="https://www.jhipster.tech/" target="_blank" rel="noopener noreferrer" jhiTranslate="home.link.homepage">JHipster homepage</a></li>
+-            <li><a href="http://stackoverflow.com/tags/jhipster/info" target="_blank" rel="noopener noreferrer" jhiTranslate="home.link.stackoverflow">JHipster on Stack Overflow</a></li>
+-            <li><a href="https://github.com/jhipster/generator-jhipster/issues?state=open" target="_blank" rel="noopener noreferrer" jhiTranslate="home.link.bugtracker">JHipster bug tracker</a></li>
+-            <li><a href="https://gitter.im/jhipster/generator-jhipster" target="_blank" rel="noopener noreferrer" jhiTranslate="home.link.chat">JHipster public chat room</a></li>
+-            <li><a href="https://twitter.com/jhipster" target="_blank" rel="noopener noreferrer" jhiTranslate="home.link.follow">follow @jhipster on Twitter</a></li>
+-        </ul>
+-
+-        <p>
+-            <span jhiTranslate="home.like">If you like JHipster, don't forget to give us a star on</span> <a href="https://github.com/jhipster/generator-jhipster" target="_blank" rel="noopener noreferrer" jhiTranslate="home.github">GitHub</a>!
+-        </p>
+-    </div>
+ </div>
+Index: src/main/webapp/i18n/zh-cn/home.json
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/webapp/i18n/zh-cn/home.json	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/webapp/i18n/zh-cn/home.json	(date 1574064629000)
+@@ -1,19 +1,19 @@
+ {
+   "home": {
+-    "title": "欢迎, Java Hipster!",
++    "title": "欢迎!",
+     "subtitle": "这里是首页",
+     "logged": {
+       "message": "您目前是以 \"{{username}}\" 账号登录."
+     },
+-    "question": "如果您有任何有关 JHipster 的问题, 可以查阅下列资源:",
++    "question": "如果您有任何有关 J 的问题, 可以查阅下列资源:",
+     "link": {
+-      "homepage": "JHipster 首頁",
+-      "stackoverflow": "Stack Overflow 上关于 JHipster 的讨论",
+-      "bugtracker": "JHipster 的缺陷追踪",
+-      "chat": "JHipster public chat room",
+-      "follow": "在 Twitter 上联络 @jhipster"
++      "homepage": "J 首頁",
++      "stackoverflow": "Stack Overflow 上关于 J 的讨论",
++      "bugtracker": "J 的缺陷追踪",
++      "chat": "J public chat room",
++      "follow": "在 Twitter 上联络 @j"
+     },
+-    "like": "如果您喜欢 JHipster, 请记得给我们加星在",
++    "like": "如果您喜欢 J, 请记得给我们加星在",
+     "github": "GitHub"
+   }
+ }
+Index: src/main/java/com/lazulite/ai/repository/ProcessInstanceRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/repository/ProcessInstanceRepository.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/java/com/lazulite/ai/repository/ProcessInstanceRepository.java	(date 1574064629000)
+@@ -9,6 +9,6 @@
+  */
+ @SuppressWarnings("unused")
+ @Repository
+-public interface ProcessInstanceRepository extends JpaRepository<ProcessInstance, Long> {
++public interface ProcessInstanceRepository extends JpaRepository<ProcessInstance, String> {
+ 
+ }
+Index: src/main/java/com/lazulite/ai/service/task/ProcessTaskExecutor.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/service/task/ProcessTaskExecutor.java	(date 1574145087000)
++++ src/main/java/com/lazulite/ai/service/task/ProcessTaskExecutor.java	(date 1574145087000)
+@@ -0,0 +1,171 @@
++package com.lazulite.ai.service.task;
++
++import com.alibaba.fastjson.JSON;
++
++import com.alibaba.fastjson.PropertyNamingStrategy;
++import com.alibaba.fastjson.serializer.SerializeConfig;
++import com.dingtalk.api.DefaultDingTalkClient;
++import com.dingtalk.api.DingTalkClient;
++import com.dingtalk.api.request.OapiDepartmentListRequest;
++import com.dingtalk.api.request.OapiMessageCorpconversationAsyncsendV2Request;
++import com.dingtalk.api.request.OapiUserGetDeptMemberRequest;
++import com.dingtalk.api.response.OapiDepartmentListResponse;
++import com.dingtalk.api.response.OapiMessageCorpconversationAsyncsendV2Response;
++import com.dingtalk.api.response.OapiUserGetDeptMemberResponse;
++import com.lazulite.ai.dingtalk.auth.DingtalkAuthService;
++import com.lazulite.ai.domain.ProcessMsgSubTask;
++import com.lazulite.ai.domain.ProcessMsgTask;
++import com.lazulite.ai.domain.enumeration.MessageStatus;
++import com.lazulite.ai.repository.ProcessMsgSubTaskRepository;
++import com.lazulite.ai.repository.ProcessMsgTaskRepository;
++import com.taobao.api.ApiException;
++import io.swagger.models.Model;
++import org.apache.commons.compress.utils.Lists;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.scheduling.annotation.Scheduled;
++import org.springframework.stereotype.Service;
++import org.springframework.transaction.annotation.Propagation;
++import org.springframework.transaction.annotation.Transactional;
++
++import javax.annotation.Resource;
++import java.time.Instant;
++import java.util.Arrays;
++import java.util.Collections;
++import java.util.List;
++
++@Service
++public class ProcessTaskExecutor {
++
++
++    private final Logger log = LoggerFactory.getLogger(ProcessTaskExecutor.class);
++
++    @Autowired
++    DingtalkAuthService dingtalkAuthService;
++
++    @Autowired
++    ProcessMsgTaskRepository processMsgTaskRepository;
++
++    @Autowired
++    ProcessMsgSubTaskRepository processMsgSubTaskRepository;
++
++
++
++    @Scheduled(fixedRate = 1000)
++    @Transactional
++    public void execute(){
++
++        Instant now = Instant.now();
++
++        List<ProcessMsgTask> allByStatusAndExecuteTimeIsAfter = processMsgTaskRepository.findAllByStatusAndExecuteTimeIsBefore(MessageStatus.NotSentYet, now);
++        log.debug("查询到点可执行任务，数量:{}",allByStatusAndExecuteTimeIsAfter.size());
++
++        for (ProcessMsgTask processMsgTask : allByStatusAndExecuteTimeIsAfter) {
++            try {
++                handleTask(processMsgTask);
++            } catch (ApiException e) {
++                log.error("执行发送消息任务时出错",e);
++            }
++        }
++    }
++
++
++
++    @Transactional(propagation = Propagation.REQUIRES_NEW)
++    public void handleTask(ProcessMsgTask processMsgTask) throws ApiException {
++
++        processMsgTask.setStatus(MessageStatus.Sending);
++        processMsgTaskRepository.save(processMsgTask);
++
++        String deptIdList = processMsgTask.getDeptIdList();
++        //获取所有的子部门id
++        String[] idArray = deptIdList.split(",");
++        List<String> userIdList = Lists.newArrayList();
++        List<OapiDepartmentListResponse.Department> departmentList = Lists.newArrayList();
++        for (String deptId : idArray) {
++
++            OapiDepartmentListResponse.Department parentDept  = new OapiDepartmentListResponse.Department();
++            parentDept.setId(Long.valueOf(deptId));
++            departmentList.add(parentDept);
++
++            DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/department/list");
++            OapiDepartmentListRequest request = new OapiDepartmentListRequest();
++            request.setId(deptId);
++            request.setHttpMethod("GET");
++            request.setFetchChild(Boolean.TRUE);
++            OapiDepartmentListResponse response = client.execute(request, dingtalkAuthService.getAccessToken());
++            departmentList.addAll(response.getDepartment());
++
++        }
++
++
++        for (OapiDepartmentListResponse.Department department : departmentList) {
++            //获取部门中所有的用户ID
++            DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/user/getDeptMember");
++            OapiUserGetDeptMemberRequest req = new OapiUserGetDeptMemberRequest();
++            req.setDeptId(department.getId()+"");
++            req.setHttpMethod("GET");
++            OapiUserGetDeptMemberResponse rsp = client.execute(req, dingtalkAuthService.getAccessToken());
++            userIdList.addAll(rsp.getUserIds());
++        }
++
++        List<List<String>> partitionList = com.google.common.collect.Lists.partition(userIdList, 100);
++        for (List<String> strings : partitionList) {
++            sendMsgToUser(processMsgTask, strings);
++        }
++
++        processMsgTask.setStatus(MessageStatus.SentSuccessfully);
++        processMsgTaskRepository.save(processMsgTask);
++
++    }
++
++    @Transactional(propagation= Propagation.REQUIRES_NEW)
++    public void sendMsgToUser(ProcessMsgTask processMsgTask, List<String> userIdList) throws ApiException {
++        DingTalkClient client;
++        client = new DefaultDingTalkClient("https://oapi.dingtalk.com/topapi/message/corpconversation/asyncsend_v2");
++        OapiMessageCorpconversationAsyncsendV2Request asyncsendV2Request = new OapiMessageCorpconversationAsyncsendV2Request();
++        String userIds = String.join(",", userIdList);
++        asyncsendV2Request.setUseridList(userIds);
++        asyncsendV2Request.setAgentId(processMsgTask.getAgentId());
++        asyncsendV2Request.setToAllUser(false);
++        asyncsendV2Request.setMsg(processMsgTask.getMsg());
++        OapiMessageCorpconversationAsyncsendV2Response asyncsendV2Response = client.execute(asyncsendV2Request,dingtalkAuthService.getAccessToken());
++        if(asyncsendV2Response.isSuccess()){
++            ProcessMsgSubTask processMsgSubTask = new ProcessMsgSubTask();
++            processMsgSubTask.setProcessMsgTask(processMsgTask);
++            processMsgSubTask.setTaskId(asyncsendV2Response.getTaskId());
++            processMsgSubTask.setUseridList(userIds);
++            processMsgSubTaskRepository.save(processMsgSubTask);
++        }
++    }
++
++
++    public static void main(String[] args) {
++        DingTalkClient client = new DefaultDingTalkClient("https://oapi.dingtalk.com/topapi/message/corpconversation/asyncsend_v2");
++
++        OapiMessageCorpconversationAsyncsendV2Request request = new OapiMessageCorpconversationAsyncsendV2Request();
++        request.setUseridList("01376814877479");
++        request.setAgentId(153858650L);
++        request.setToAllUser(false);
++
++        OapiMessageCorpconversationAsyncsendV2Request.Msg msg = new OapiMessageCorpconversationAsyncsendV2Request.Msg();
++        msg.setActionCard(new OapiMessageCorpconversationAsyncsendV2Request.ActionCard());
++        msg.getActionCard().setTitle("xxx123411111");
++        msg.getActionCard().setMarkdown("### 测试123111");
++        msg.getActionCard().setSingleTitle("测试测试");
++        msg.getActionCard().setSingleUrl("https://www.baidu.com");
++        msg.setMsgtype("action_card");
++        request.setMsg(msg);
++
++
++        // 序列化配置对象
++        SerializeConfig config = new SerializeConfig();
++        config.setPropertyNamingStrategy(PropertyNamingStrategy.SnakeCase);
++
++
++
++        System.out.println(JSON.toJSON(msg,config));
++    }
++
++}
+Index: src/main/java/com/lazulite/ai/repository/FormComponentValuesRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/repository/FormComponentValuesRepository.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/java/com/lazulite/ai/repository/FormComponentValuesRepository.java	(date 1574064629000)
+@@ -9,6 +9,6 @@
+  */
+ @SuppressWarnings("unused")
+ @Repository
+-public interface FormComponentValuesRepository extends JpaRepository<FormComponentValues, Long> {
++public interface FormComponentValuesRepository extends JpaRepository<FormComponentValues, String> {
+ 
+ }
+Index: src/main/java/com/lazulite/ai/repository/ProcessTemplateRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/repository/ProcessTemplateRepository.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/java/com/lazulite/ai/repository/ProcessTemplateRepository.java	(date 1574064629000)
+@@ -3,6 +3,8 @@
+ import org.springframework.data.jpa.repository.*;
+ import org.springframework.stereotype.Repository;
+ 
++import java.util.Optional;
++
+ 
+ /**
+  * Spring Data  repository for the ProcessTemplate entity.
+@@ -11,4 +13,5 @@
+ @Repository
+ public interface ProcessTemplateRepository extends JpaRepository<ProcessTemplate, Long> {
+ 
++    public Optional<ProcessTemplate> findFirstByProcessCode(String code);
+ }
+Index: src/main/java/com/lazulite/ai/repository/ProcessMsgTaskRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/repository/ProcessMsgTaskRepository.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/java/com/lazulite/ai/repository/ProcessMsgTaskRepository.java	(date 1574133344000)
+@@ -1,8 +1,12 @@
+ package com.lazulite.ai.repository;
+ import com.lazulite.ai.domain.ProcessMsgTask;
++import com.lazulite.ai.domain.enumeration.MessageStatus;
+ import org.springframework.data.jpa.repository.*;
+ import org.springframework.stereotype.Repository;
+ 
++import java.time.Instant;
++import java.util.List;
++
+ 
+ /**
+  * Spring Data  repository for the ProcessMsgTask entity.
+@@ -11,4 +15,7 @@
+ @Repository
+ public interface ProcessMsgTaskRepository extends JpaRepository<ProcessMsgTask, Long> {
+ 
++    List<ProcessMsgTask> findAllByStatusAndExecuteTimeIsBefore(MessageStatus status, Instant now);
++
++    List<ProcessMsgTask> findAllByStatus(MessageStatus status);
+ }
+Index: src/main/webapp/app/layouts/navbar/navbar.component.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/webapp/app/layouts/navbar/navbar.component.html	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/webapp/app/layouts/navbar/navbar.component.html	(date 1574064629000)
+@@ -1,6 +1,5 @@
+ <nav class="navbar navbar-dark navbar-expand-md bg-dark">
+     <a class="navbar-brand logo" routerLink="/" (click)="collapseNavbar()">
+-        <span class="logo-img"></span>
+         <span jhiTranslate="global.title" class="navbar-title">Ai</span> <span class="navbar-version">{{version}}</span>
+     </a>
+     <a class="navbar-toggler d-lg-none" href="javascript:void(0);" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation" (click)="toggleNavbar()">
+Index: src/main/webapp/i18n/en/home.json
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/webapp/i18n/en/home.json	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/webapp/i18n/en/home.json	(date 1574064629000)
+@@ -1,19 +1,19 @@
+ {
+   "home": {
+-    "title": "Welcome, Java Hipster!",
++    "title": "Welcome !",
+     "subtitle": "This is your homepage",
+     "logged": {
+       "message": "You are logged in as user \"{{username}}\"."
+     },
+-    "question": "If you have any question on JHipster:",
++    "question": "If you have any question on J:",
+     "link": {
+-      "homepage": "JHipster homepage",
+-      "stackoverflow": "JHipster on Stack Overflow",
+-      "bugtracker": "JHipster bug tracker",
+-      "chat": "JHipster public chat room",
+-      "follow": "follow @jhipster on Twitter"
++      "homepage": "J homepage",
++      "stackoverflow": "J on Stack Overflow",
++      "bugtracker": "J bug tracker",
++      "chat": "J public chat room",
++      "follow": "follow @j on Twitter"
+     },
+-    "like": "If you like JHipster, don't forget to give us a star on",
++    "like": "If you like J, don't forget to give us a star on",
+     "github": "GitHub"
+   }
+ }
+Index: src/main/resources/config/application-dev.yml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/resources/config/application-dev.yml	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/resources/config/application-dev.yml	(date 1574133267000)
+@@ -36,9 +36,9 @@
+       indent-output: true
+   datasource:
+     type: com.zaxxer.hikari.HikariDataSource
+-    url: jdbc:mysql://localhost:3306/ai?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC
+-    username: root
+-    password:
++    url: jdbc:mysql://47.103.152.2:3306/ai?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai
++    username: admin
++    password: tBR6MvzA
+     hikari:
+       poolName: Hikari
+       auto-commit: false
+Index: src/main/java/com/lazulite/ai/config/WebClientConfiguration.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/config/WebClientConfiguration.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/config/WebClientConfiguration.java	(date 1574064629000)
+@@ -0,0 +1,57 @@
++package com.lazulite.ai.config;
++
++import org.apache.http.client.config.RequestConfig;
++import org.apache.http.impl.client.CloseableHttpClient;
++import org.apache.http.impl.client.HttpClientBuilder;
++import org.apache.http.impl.client.IdleConnectionEvictor;
++import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.context.annotation.Bean;
++import org.springframework.context.annotation.Configuration;
++
++import java.util.concurrent.TimeUnit;
++
++/**
++ * Created by Alex on 2017/4/26.
++ */
++@Configuration
++public class WebClientConfiguration {
++    @Bean
++    public PoolingHttpClientConnectionManager connectionManager(){
++        PoolingHttpClientConnectionManager poolingHttpClientConnectionManager =new PoolingHttpClientConnectionManager();
++        //设置每个主机最大的并发数
++        poolingHttpClientConnectionManager.setDefaultMaxPerRoute(100);
++        // 最大连接数
++        poolingHttpClientConnectionManager.setMaxTotal(100);
++        return poolingHttpClientConnectionManager;
++    }
++
++
++    @Autowired
++    @Bean
++    public HttpClientBuilder closeableHttpClient(PoolingHttpClientConnectionManager connectionManager , RequestConfig requestConfig){
++        return  HttpClientBuilder.create().setConnectionManager(connectionManager).setDefaultRequestConfig(requestConfig);
++    }
++
++    @Bean
++    public CloseableHttpClient httpClient(HttpClientBuilder builder){
++        return builder.build();
++    }
++
++    @Bean
++    public RequestConfig requestConfig(){
++        return RequestConfig.custom()
++            //设置创建连接的最长时间
++            .setConnectTimeout(30000)
++            //从连接池中获取到连接的最长时间
++//            .setConnectionRequestTimeout(500)
++            //数据传输的最长时间
++            .setSocketTimeout(120000) //120秒
++            .build();
++    }
++
++    @Bean
++    public IdleConnectionEvictor idleConnectionEvictor(PoolingHttpClientConnectionManager connectionManager){
++        return new IdleConnectionEvictor(connectionManager,1, TimeUnit.MINUTES);
++    }
++}
+Index: src/main/java/com/lazulite/ai/config/CacheConfiguration.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/config/CacheConfiguration.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/java/com/lazulite/ai/config/CacheConfiguration.java	(date 1574064629000)
+@@ -19,6 +19,8 @@
+ 
+     private final javax.cache.configuration.Configuration<Object, Object> jcacheConfiguration;
+ 
++    private  JHipsterProperties jHipsterProperties;
++
+     public CacheConfiguration(JHipsterProperties jHipsterProperties) {
+         JHipsterProperties.Cache.Ehcache ehcache = jHipsterProperties.getCache().getEhcache();
+ 
+@@ -27,6 +29,7 @@
+                 ResourcePoolsBuilder.heap(ehcache.getMaxEntries()))
+                 .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofSeconds(ehcache.getTimeToLiveSeconds())))
+                 .build());
++        this.jHipsterProperties = jHipsterProperties;
+     }
+ 
+     @Bean
+@@ -56,6 +59,45 @@
+             createCache(cm, com.lazulite.ai.domain.ProcessMsgTask.class.getName() + ".processMsgSubTasks");
+             createCache(cm, com.lazulite.ai.domain.ProcessMsgSubTask.class.getName());
+             // jhipster-needle-ehcache-add-entry
++
++            JHipsterProperties.Cache.Ehcache ehcache = jHipsterProperties.getCache().getEhcache();
++            javax.cache.configuration.Configuration<Object, Object> tokenConfiguration = Eh107Configuration.fromEhcacheCacheConfiguration(
++                CacheConfigurationBuilder.newCacheConfigurationBuilder(Object.class, Object.class,
++                    ResourcePoolsBuilder.heap(ehcache.getMaxEntries()))
++                    .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofSeconds(Constants.ACCESS_TOKEN_SECONDS)))
++                    .build());
++            javax.cache.configuration.Configuration<Object, Object> jsapiConfiguration = Eh107Configuration.fromEhcacheCacheConfiguration(
++                CacheConfigurationBuilder.newCacheConfigurationBuilder(Object.class, Object.class,
++                    ResourcePoolsBuilder.heap(ehcache.getMaxEntries()))
++                    .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofSeconds(Constants.JSAPI_TICKET_CACHE_TIME)))
++                    .build());
++            javax.cache.configuration.Configuration<Object, Object> repeatLoginConfiguration = Eh107Configuration.fromEhcacheCacheConfiguration(
++                CacheConfigurationBuilder.newCacheConfigurationBuilder(Object.class, Object.class,
++                    ResourcePoolsBuilder.heap(ehcache.getMaxEntries()))
++                    .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofSeconds(Constants.REPEAT_LOGIN_CACHE_TIME)))
++                    .build());
++            javax.cache.configuration.Configuration<Object, Object> commendStatusConfiguration = Eh107Configuration.fromEhcacheCacheConfiguration(
++                CacheConfigurationBuilder.newCacheConfigurationBuilder(Object.class, Object.class,
++                    ResourcePoolsBuilder.heap(ehcache.getMaxEntries()))
++                    .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofSeconds(Constants.COMMEND_STATUS_CACHE_TIME)))
++                    .build());
++            javax.cache.configuration.Configuration<Object, Object> collectStatusConfiguration = Eh107Configuration.fromEhcacheCacheConfiguration(
++                CacheConfigurationBuilder.newCacheConfigurationBuilder(Object.class, Object.class,
++                    ResourcePoolsBuilder.heap(ehcache.getMaxEntries()))
++                    .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofSeconds(Constants.COLLECT_STATUS_CACHE_TIME)))
++                    .build());
++            javax.cache.configuration.Configuration<Object, Object> syncStationConfiguration = Eh107Configuration.fromEhcacheCacheConfiguration(
++                CacheConfigurationBuilder.newCacheConfigurationBuilder(Object.class, Object.class,
++                    ResourcePoolsBuilder.heap(ehcache.getMaxEntries()))
++                    .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofSeconds(Constants.COLLECT_STATUS_CACHE_TIME)))
++                    .build());
++
++            cm.createCache(Constants.ACCESS_TOKEN,tokenConfiguration);//ACCESS_TOKEN_SECONDS
++            cm.createCache(Constants.JSAPI_TICKET,jsapiConfiguration);//ACCESS_TOKEN_SECONDS
++            cm.createCache(Constants.REPEAT_LOGIN,repeatLoginConfiguration);//ACCESS_TOKEN_SECONDS
++            cm.createCache(Constants.COMMEND_STATUS,commendStatusConfiguration);//
++            cm.createCache(Constants.COLLECT_STATUS,collectStatusConfiguration);//
++            cm.createCache(Constants.CACHE_NAME,syncStationConfiguration);//
+         };
+     }
+ 
+Index: src/main/java/com/lazulite/ai/domain/FormComponentValues.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/domain/FormComponentValues.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/java/com/lazulite/ai/domain/FormComponentValues.java	(date 1574064629000)
+@@ -18,8 +18,8 @@
+     private static final long serialVersionUID = 1L;
+ 
+     @Id
+-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+-    private Long id;
++    @Column(name = "id", length = 100)
++    private String id;
+ 
+     @Column(name = "component_type")
+     private String componentType;
+@@ -38,11 +38,11 @@
+     private ProcessInstance processInstance;
+ 
+     // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
+-    public Long getId() {
++    public String getId() {
+         return id;
+     }
+ 
+-    public void setId(Long id) {
++    public void setId(String id) {
+         this.id = id;
+     }
+ 
+Index: src/main/java/com/lazulite/ai/domain/ProcessInstance.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/domain/ProcessInstance.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/java/com/lazulite/ai/domain/ProcessInstance.java	(date 1574064629000)
+@@ -21,8 +21,8 @@
+     private static final long serialVersionUID = 1L;
+ 
+     @Id
+-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+-    private Long id;
++    @Column(name = "id", length = 100)
++    private String id;
+ 
+     @Column(name = "attached_process_instance_ids")
+     private String attachedProcessInstanceIds;
+@@ -80,11 +80,11 @@
+     private ProcessTemplate processTemplate;
+ 
+     // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
+-    public Long getId() {
++    public String getId() {
+         return id;
+     }
+ 
+-    public void setId(Long id) {
++    public void setId(String id) {
+         this.id = id;
+     }
+ 
+Index: src/main/java/com/lazulite/ai/domain/PersistentAuditEvent.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/domain/PersistentAuditEvent.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/java/com/lazulite/ai/domain/PersistentAuditEvent.java	(date 1574064629000)
+@@ -34,7 +34,7 @@
+     private String auditEventType;
+ 
+     @ElementCollection
+-    @MapKeyColumn(name = "name")
++    @MapKeyColumn(name = "name",length = 191)
+     @Column(name = "value")
+     @CollectionTable(name = "jhi_persistent_audit_evt_data", joinColumns=@JoinColumn(name="event_id"))
+     private Map<String, String> data = new HashMap<>();
+Index: src/test/java/com/lazulite/ai/web/rest/ProcessInstanceResourceIT.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/test/java/com/lazulite/ai/web/rest/ProcessInstanceResourceIT.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/test/java/com/lazulite/ai/web/rest/ProcessInstanceResourceIT.java	(date 1574064629000)
+@@ -200,7 +200,7 @@
+         int databaseSizeBeforeCreate = processInstanceRepository.findAll().size();
+ 
+         // Create the ProcessInstance with an existing ID
+-        processInstance.setId(1L);
++        processInstance.setId(1+"");
+ 
+         // An entity with an existing ID cannot be created, so this API call must fail
+         restProcessInstanceMockMvc.perform(post("/api/process-instances")
+@@ -224,7 +224,7 @@
+         restProcessInstanceMockMvc.perform(get("/api/process-instances?sort=id,desc"))
+             .andExpect(status().isOk())
+             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+-            .andExpect(jsonPath("$.[*].id").value(hasItem(processInstance.getId().intValue())))
++            .andExpect(jsonPath("$.[*].id").value(hasItem(processInstance.getId()+"")))
+             .andExpect(jsonPath("$.[*].attachedProcessInstanceIds").value(hasItem(DEFAULT_ATTACHED_PROCESS_INSTANCE_IDS)))
+             .andExpect(jsonPath("$.[*].bizAction").value(hasItem(DEFAULT_BIZ_ACTION)))
+             .andExpect(jsonPath("$.[*].businessId").value(hasItem(DEFAULT_BUSINESS_ID)))
+@@ -250,7 +250,7 @@
+         restProcessInstanceMockMvc.perform(get("/api/process-instances/{id}", processInstance.getId()))
+             .andExpect(status().isOk())
+             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+-            .andExpect(jsonPath("$.id").value(processInstance.getId().intValue()))
++            .andExpect(jsonPath("$.id").value(processInstance.getId()+""))
+             .andExpect(jsonPath("$.attachedProcessInstanceIds").value(DEFAULT_ATTACHED_PROCESS_INSTANCE_IDS))
+             .andExpect(jsonPath("$.bizAction").value(DEFAULT_BIZ_ACTION))
+             .andExpect(jsonPath("$.businessId").value(DEFAULT_BUSINESS_ID))
+Index: src/main/resources/config/application.yml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/resources/config/application.yml	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/resources/config/application.yml	(date 1574064629000)
+@@ -72,9 +72,9 @@
+   jpa:
+     open-in-view: false
+     properties:
+-      hibernate.jdbc.time_zone: UTC
++      hibernate.jdbc.time_zone: Asia/Shanghai
+     hibernate:
+-      ddl-auto: none
++      ddl-auto: update
+       naming:
+         physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+         implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+@@ -101,7 +101,14 @@
+   output:
+     ansi:
+       console-available: true
+-
++  cloud:
++    alicloud:
++      access-key: 4oQ4LRjleuEjuat7
++      secret-key: OaOM3kupl5aLUjeMtAlyT4tlhY5UUZ
++      oss:
++        endpoint: oss-cn-shanghai-fosun1-d01-a.cloud-ops.fosun.com
++  liquibase:
++    enabled: false
+ server:
+   servlet:
+     session:
+@@ -153,3 +160,18 @@
+ # ===================================================================
+ 
+ # application:
++
++
++
++dingtalk:
++  CORP_ID: dingzemh1ik03xilrpn5
++  CORP_SECRET: aSzXwYoxS-_3gmUMWCes35rT0FvYpnYW0minqr_WWKAggK9q1rezFdSd0pUG9j1a
++  SSO_Secret: octxb59EhtM8aDAcjtLFsLRsHItSiqhnprna0tMbg8uh9z2c1A3DwejTcHwqzrXH
++  OAPI_HOST: https://oapi.dingtalk.com
++  OA_BACKGROUND_URL: http://chenjunfu.vaiwan.com:8081/callback
++  TOKEN: 123456
++  ENCODING_AES_KEY: 1234567890123456789012345678901234567890123
++  sns_authorize_url: https://oapi.dingtalk.com/connect/oauth2/sns_authorize
++  jssdk_sign_domain: http://localhost:8080/
++  agentid: 316974687
++  dept_root_id: 105170167
+Index: src/test/java/com/lazulite/ai/web/rest/FormComponentValuesResourceIT.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/test/java/com/lazulite/ai/web/rest/FormComponentValuesResourceIT.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/test/java/com/lazulite/ai/web/rest/FormComponentValuesResourceIT.java	(date 1574064629000)
+@@ -144,7 +144,7 @@
+         int databaseSizeBeforeCreate = formComponentValuesRepository.findAll().size();
+ 
+         // Create the FormComponentValues with an existing ID
+-        formComponentValues.setId(1L);
++        formComponentValues.setId(1+"");
+ 
+         // An entity with an existing ID cannot be created, so this API call must fail
+         restFormComponentValuesMockMvc.perform(post("/api/form-component-values")
+@@ -168,7 +168,7 @@
+         restFormComponentValuesMockMvc.perform(get("/api/form-component-values?sort=id,desc"))
+             .andExpect(status().isOk())
+             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+-            .andExpect(jsonPath("$.[*].id").value(hasItem(formComponentValues.getId().intValue())))
++            .andExpect(jsonPath("$.[*].id").value(hasItem(formComponentValues.getId().toString())))
+             .andExpect(jsonPath("$.[*].componentType").value(hasItem(DEFAULT_COMPONENT_TYPE)))
+             .andExpect(jsonPath("$.[*].value").value(hasItem(DEFAULT_VALUE)))
+             .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
+@@ -185,7 +185,7 @@
+         restFormComponentValuesMockMvc.perform(get("/api/form-component-values/{id}", formComponentValues.getId()))
+             .andExpect(status().isOk())
+             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+-            .andExpect(jsonPath("$.id").value(formComponentValues.getId().intValue()))
++            .andExpect(jsonPath("$.id").value(formComponentValues.getId().toString()))
+             .andExpect(jsonPath("$.componentType").value(DEFAULT_COMPONENT_TYPE))
+             .andExpect(jsonPath("$.value").value(DEFAULT_VALUE))
+             .andExpect(jsonPath("$.name").value(DEFAULT_NAME))
+Index: src/main/java/com/lazulite/ai/service/FormComponentValuesService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/service/FormComponentValuesService.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/java/com/lazulite/ai/service/FormComponentValuesService.java	(date 1574064629000)
+@@ -58,7 +58,7 @@
+      * @return the entity.
+      */
+     @Transactional(readOnly = true)
+-    public Optional<FormComponentValues> findOne(Long id) {
++    public Optional<FormComponentValues> findOne(String id) {
+         log.debug("Request to get FormComponentValues : {}", id);
+         return formComponentValuesRepository.findById(id);
+     }
+@@ -68,7 +68,7 @@
+      *
+      * @param id the id of the entity.
+      */
+-    public void delete(Long id) {
++    public void delete(String id) {
+         log.debug("Request to delete FormComponentValues : {}", id);
+         formComponentValuesRepository.deleteById(id);
+     }
+Index: pom.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- pom.xml	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ pom.xml	(date 1574138345000)
+@@ -109,6 +109,51 @@
+     </dependencyManagement>
+ 
+     <dependencies>
++
++
++        <dependency>
++            <groupId>org.springframework.cloud</groupId>
++            <artifactId>spring-cloud-starter-alicloud-oss</artifactId>
++            <version>0.2.1.RELEASE</version>
++        </dependency>
++        <dependency>
++            <groupId>com.google.code.gson</groupId>
++            <artifactId>gson</artifactId>
++            <version>2.8.2</version>
++        </dependency>
++        <dependency>
++            <groupId>org.jsoup</groupId>
++            <artifactId>jsoup</artifactId>
++            <version>1.11.3</version>
++        </dependency>
++        <dependency>
++            <groupId>joda-time</groupId>
++            <artifactId>joda-time</artifactId>
++            <version>2.10.1</version>
++        </dependency>
++        <dependency>
++            <groupId>org.apache.httpcomponents</groupId>
++            <artifactId>httpclient</artifactId>
++            <version>4.5.3</version>
++        </dependency>
++        <dependency>
++            <groupId>org.apache.httpcomponents</groupId>
++            <artifactId>httpmime</artifactId>
++            <version>4.5.3</version>
++        </dependency>
++        <dependency>
++            <groupId>com.alibaba</groupId>
++            <artifactId>fastjson</artifactId>
++            <version>1.2.62</version>
++        </dependency>
++
++        <dependency>
++            <groupId>com.taobao</groupId>
++            <artifactId>taobao-sdk-java-auto</artifactId>
++            <version>1479188381469-20191104</version>
++        </dependency>
++
++
+         <dependency>
+             <groupId>io.github.jhipster</groupId>
+             <artifactId>jhipster-framework</artifactId>
+Index: src/main/java/com/lazulite/ai/service/ProcessInstanceService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/service/ProcessInstanceService.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/main/java/com/lazulite/ai/service/ProcessInstanceService.java	(date 1574064629000)
+@@ -58,7 +58,7 @@
+      * @return the entity.
+      */
+     @Transactional(readOnly = true)
+-    public Optional<ProcessInstance> findOne(Long id) {
++    public Optional<ProcessInstance> findOne(String id) {
+         log.debug("Request to get ProcessInstance : {}", id);
+         return processInstanceRepository.findById(id);
+     }
+@@ -68,7 +68,7 @@
+      *
+      * @param id the id of the entity.
+      */
+-    public void delete(Long id) {
++    public void delete(String id) {
+         log.debug("Request to delete ProcessInstance : {}", id);
+         processInstanceRepository.deleteById(id);
+     }
+Index: src/main/java/com/lazulite/ai/config/FastJsonSerializeConfig.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/config/FastJsonSerializeConfig.java	(date 1574138983000)
++++ src/main/java/com/lazulite/ai/config/FastJsonSerializeConfig.java	(date 1574138983000)
+@@ -0,0 +1,27 @@
++package com.lazulite.ai.config;
++
++import com.alibaba.fastjson.PropertyNamingStrategy;
++import com.alibaba.fastjson.serializer.SerializeConfig;
++import org.springframework.context.annotation.Bean;
++import org.springframework.context.annotation.Configuration;
++import org.springframework.context.annotation.Scope;
++
++@Configuration
++public class FastJsonSerializeConfig {
++
++    @Bean("snakeCaseSerializeConfig")
++    @Scope("singleton")
++    public SerializeConfig snakeCaseSerializeConfig() {
++        SerializeConfig config = new SerializeConfig();
++        config.propertyNamingStrategy = PropertyNamingStrategy.SnakeCase;
++        return config;
++    }
++
++    @Bean("pascalCasSerializeConfig")
++    @Scope("singleton")
++    public SerializeConfig pascalCasSerializeConfig() {
++        SerializeConfig config = new SerializeConfig();
++        config.propertyNamingStrategy = PropertyNamingStrategy.PascalCase;
++        return config;
++    }
++}
+Index: src/test/java/com/lazulite/ai/domain/ProcessInstanceTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/test/java/com/lazulite/ai/domain/ProcessInstanceTest.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/test/java/com/lazulite/ai/domain/ProcessInstanceTest.java	(date 1574064629000)
+@@ -10,11 +10,11 @@
+     public void equalsVerifier() throws Exception {
+         TestUtil.equalsVerifier(ProcessInstance.class);
+         ProcessInstance processInstance1 = new ProcessInstance();
+-        processInstance1.setId(1L);
++        processInstance1.setId(1+"");
+         ProcessInstance processInstance2 = new ProcessInstance();
+         processInstance2.setId(processInstance1.getId());
+         assertThat(processInstance1).isEqualTo(processInstance2);
+-        processInstance2.setId(2L);
++        processInstance2.setId(2+"");
+         assertThat(processInstance1).isNotEqualTo(processInstance2);
+         processInstance1.setId(null);
+         assertThat(processInstance1).isNotEqualTo(processInstance2);
+Index: src/test/java/com/lazulite/ai/domain/FormComponentValuesTest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/test/java/com/lazulite/ai/domain/FormComponentValuesTest.java	(revision c892c7467dd53934bd16f673454d108f681e6eb0)
++++ src/test/java/com/lazulite/ai/domain/FormComponentValuesTest.java	(date 1574064629000)
+@@ -10,11 +10,11 @@
+     public void equalsVerifier() throws Exception {
+         TestUtil.equalsVerifier(FormComponentValues.class);
+         FormComponentValues formComponentValues1 = new FormComponentValues();
+-        formComponentValues1.setId(1L);
++        formComponentValues1.setId(1+"");
+         FormComponentValues formComponentValues2 = new FormComponentValues();
+         formComponentValues2.setId(formComponentValues1.getId());
+         assertThat(formComponentValues1).isEqualTo(formComponentValues2);
+-        formComponentValues2.setId(2L);
++        formComponentValues2.setId(2+"");
+         assertThat(formComponentValues1).isNotEqualTo(formComponentValues2);
+         formComponentValues1.setId(null);
+         assertThat(formComponentValues1).isNotEqualTo(formComponentValues2);
+Index: src/main/java/com/lazulite/ai/toolbox/pcd/Province.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/toolbox/pcd/Province.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/toolbox/pcd/Province.java	(date 1574064629000)
+@@ -0,0 +1,38 @@
++package com.lazulite.ai.toolbox.pcd;
++
++import java.util.List;
++
++/**
++ * 省份
++ * @author jx on 2018/4/12.
++ */
++
++public class Province {
++    private String code;
++    private String name;
++    private List<City> cityList;
++
++    public String getCode() {
++        return code;
++    }
++
++    public void setCode(String code) {
++        this.code = code;
++    }
++
++    public String getName() {
++        return name;
++    }
++
++    public void setName(String name) {
++        this.name = name;
++    }
++
++    public List<City> getCityList() {
++        return cityList;
++    }
++
++    public void setCityList(List<City> cityList) {
++        this.cityList = cityList;
++    }
++}
+Index: src/main/java/com/lazulite/ai/toolbox/pcd/JSONFormatUtils.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/toolbox/pcd/JSONFormatUtils.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/toolbox/pcd/JSONFormatUtils.java	(date 1574064629000)
+@@ -0,0 +1,33 @@
++package com.lazulite.ai.toolbox.pcd;
++
++import com.google.gson.Gson;
++import com.google.gson.GsonBuilder;
++
++import java.io.FileWriter;
++import java.io.IOException;
++import java.util.List;
++
++/**
++ * @author jx on 2018/10/29.
++ */
++
++public class JSONFormatUtils {
++
++    public static  <T> void jsonWriter(T data, String filePath) {
++        Gson gson = new GsonBuilder().setPrettyPrinting().create();
++        try(FileWriter writer = new FileWriter(filePath)) {
++            gson.toJson(data, writer);
++        } catch (IOException e) {
++            e.printStackTrace();
++        }
++    }
++
++    public static <T> void jsonWriter(List<T> data, String filePath) {
++        Gson gson = new GsonBuilder().setPrettyPrinting().create();
++        try(FileWriter writer = new FileWriter(filePath)) {
++            gson.toJson(data, writer);
++        } catch (IOException e) {
++            e.printStackTrace();
++        }
++    }
++}
+Index: src/main/java/com/lazulite/ai/toolbox/pcd/Area.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/toolbox/pcd/Area.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/toolbox/pcd/Area.java	(date 1574064629000)
+@@ -0,0 +1,29 @@
++package com.lazulite.ai.toolbox.pcd;
++
++/**
++ * 区，县
++ * @author jx on 2018/4/12.
++ */
++
++public class Area {
++    private String code;
++    private String name;
++
++    public String getCode() {
++        return code;
++    }
++
++    public void setCode(String code) {
++        this.code = code;
++    }
++
++    public String getName() {
++        return name;
++    }
++
++    public void setName(String name) {
++        this.name = name;
++    }
++
++}
++
+Index: src/main/java/com/lazulite/ai/toolbox/pcd/PcdDataCrawler.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/toolbox/pcd/PcdDataCrawler.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/toolbox/pcd/PcdDataCrawler.java	(date 1574064629000)
+@@ -0,0 +1,120 @@
++package com.lazulite.ai.toolbox.pcd;
++
++import org.jsoup.Jsoup;
++import org.jsoup.nodes.Document;
++import org.jsoup.select.Elements;
++
++import java.io.IOException;
++import java.util.ArrayList;
++import java.util.List;
++
++/**
++ * @author jx on 2019/1/3.
++ */
++
++public class PcdDataCrawler {
++
++    public static List<Province> getProvinceList() {
++        try {
++            //2019年5月中华人民共和国县以上行政区划代码网页
++            Document doc = Jsoup.connect("http://www.mca.gov.cn/article/sj/xzqh/2019/201901-06/201906211421.html").maxBodySize(0).get();
++            Elements elements = doc.getElementsByClass("xl7528234");
++            //省和市
++            Elements elementsProAndCity = doc.getElementsByClass("xl7428234");
++            List<String> stringListProAndCity = elementsProAndCity.eachText();
++            List<String> stringList = elements.eachText();
++            List<String> stringName = new ArrayList<String>();
++            List<String> stringCode = new ArrayList<String>();
++            stringListProAndCity.addAll(stringList);
++            for (int i = 0; i < stringListProAndCity.size(); i++) {
++                if (i % 2 == 0) {
++                    //地区代码
++                    stringCode.add(stringListProAndCity.get(i));
++                } else {
++                    //地区名字
++                    stringName.add(stringListProAndCity.get(i));
++                }
++            }
++            //正常情况 两个 list size 应该 一样
++            System.out.println("stringName  size= " + stringName.size() + "   stringCode   size= " + stringCode.size());
++            if (stringName.size() != stringCode.size()) {
++                throw new RuntimeException("数据错误");
++            }
++            List<Province> provinceList = processData(stringName, stringCode);
++            return provinceList;
++        } catch (IOException e) {
++            e.printStackTrace();
++        }
++        return null;
++    }
++
++    /**
++     * 生成省份列表数据
++     *
++     * @param stringName
++     * @param stringCode
++     * @return
++     */
++
++    private static List<Province> processData(List<String> stringName, List<String> stringCode) {
++        List<Province> provinceList = new ArrayList<Province>();
++        for (int i = 0; i < stringCode.size(); i++) {
++            String provinceName = stringName.get(i);
++            String provinceCode = stringCode.get(i);
++            if (provinceCode.endsWith("0000")) {
++                Province province = new Province();
++                provinceList.add(province);
++                province.setCode(provinceCode);
++                province.setName(provinceName);
++                List<City> cities = new ArrayList<City>();
++                province.setCityList(cities);
++
++                //直辖市 城市和省份名称一样
++                if (provinceName.contains("北京") || provinceName.contains("上海") || provinceName.contains("天津") || provinceName.contains("重庆")) {
++                    City city = new City();
++                    List<Area> areas = new ArrayList<Area>();
++                    city.setName(provinceName);
++                    city.setCode(provinceCode);
++                    city.setAreaList(areas);
++                    cities.add(city);
++                    //县区
++                    for (int k = 0; k < stringCode.size(); k++) {
++                        String areaName = stringName.get(k);
++                        String areaCode = stringCode.get(k);
++                        if (!provinceCode.equals(areaCode) && areaCode.startsWith(provinceCode.substring(0, 2))) {
++                            Area area = new Area();
++                            area.setName(areaName);
++                            area.setCode(areaCode);
++                            areas.add(area);
++                        }
++                    }
++                }
++                for (int j = 0; j < stringCode.size(); j++) {
++                    String cityName = stringName.get(j);
++                    String cityCode = stringCode.get(j);
++                    //遍历获取地级市
++                    if (!cityCode.equals(provinceCode) && cityCode.startsWith(provinceCode.substring(0, 2)) && cityCode.endsWith("00")) {
++                        City city = new City();
++                        List<Area> areas = new ArrayList<Area>();
++                        city.setName(cityName);
++                        city.setCode(cityCode);
++                        city.setAreaList(areas);
++                        cities.add(city);
++                        //遍历获取县区
++                        for (int k = 0; k < stringCode.size(); k++) {
++                            String areaName = stringName.get(k);
++                            String areaCode = stringCode.get(k);
++                            if (!areaCode.equals(cityCode) && areaCode.startsWith(cityCode.substring(0, 4))) {
++                                Area area = new Area();
++                                area.setName(areaName);
++                                area.setCode(areaCode);
++                                areas.add(area);
++                            }
++                        }
++                    }
++                }
++            }
++        }
++        return provinceList;
++    }
++}
+Index: src/main/java/com/lazulite/ai/toolbox/pcd/City.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/toolbox/pcd/City.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/toolbox/pcd/City.java	(date 1574064629000)
+@@ -0,0 +1,38 @@
++package com.lazulite.ai.toolbox.pcd;
++
++import java.util.List;
++
++/**
++ * 地级市
++ * @author jx on 2018/4/12.
++ */
++
++public class City {
++    private String code;
++    private String name;
++    private List<Area> areaList;
++
++    public String getCode() {
++        return code;
++    }
++
++    public void setCode(String code) {
++        this.code = code;
++    }
++
++    public String getName() {
++        return name;
++    }
++
++    public void setName(String name) {
++        this.name = name;
++    }
++
++    public List<Area> getAreaList() {
++        return areaList;
++    }
++
++    public void setAreaList(List<Area> areaList) {
++        this.areaList = areaList;
++    }
++}
+Index: src/main/java/com/lazulite/ai/toolbox/util/MixUtils.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/toolbox/util/MixUtils.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/toolbox/util/MixUtils.java	(date 1574064629000)
+@@ -0,0 +1,108 @@
++package com.lazulite.ai.toolbox.util;
++
++import org.springframework.beans.BeanWrapper;
++import org.springframework.beans.BeanWrapperImpl;
++
++import java.text.ParseException;
++import java.text.SimpleDateFormat;
++import java.util.Calendar;
++import java.util.Date;
++import java.util.HashSet;
++import java.util.Set;
++
++public class MixUtils {
++
++
++    private static final int invalidAge = -1;//非法的年龄，用于处理异常。
++
++    public static String[] getNullPropertyNames (Object source) {
++
++        final BeanWrapper src = new BeanWrapperImpl(source);
++        java.beans.PropertyDescriptor[] pds = src.getPropertyDescriptors();
++
++        Set<String> emptyNames = new HashSet<String>();
++        for(java.beans.PropertyDescriptor pd : pds) {
++            Object srcValue = src.getPropertyValue(pd.getName());
++            if (srcValue == null) emptyNames.add(pd.getName());
++        }
++        String[] result = new String[emptyNames.size()];
++        return emptyNames.toArray(result);
++    }
++
++
++
++    /**
++     *根据身份证号码计算年龄
++     * @param idNumber 考虑到了15位身份证，但不一定存在
++     */
++
++    public static int getAgeByIDNumber(String idNumber) {
++        String dateStr;
++        if (idNumber.length() == 15) {
++            dateStr = "19" + idNumber.substring(6, 12);
++        } else if (idNumber.length() == 18) {
++            dateStr = idNumber.substring(6, 14);
++        } else {//默认是合法身份证号，但不排除有意外发生
++            return invalidAge;
++        }
++
++
++        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
++        try {
++            Date birthday = simpleDateFormat.parse(dateStr);
++            return getAgeByDate(birthday);
++        } catch (ParseException e) {
++            return invalidAge;
++        }
++
++
++    }
++
++    /**
++     *根据生日计算年龄
++     * @param dateStr 这样格式的生日 1990-01-01
++     */
++
++    public static int getAgeByDateString(String dateStr) {
++        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
++        try {
++            Date birthday = simpleDateFormat.parse(dateStr);
++            return getAgeByDate(birthday);
++        } catch (ParseException e) {
++            return -1;
++        }
++    }
++
++
++    public static int getAgeByDate(Date birthday) {
++        Calendar calendar = Calendar.getInstance();
++
++        //calendar.before()有的点bug
++        if (calendar.getTimeInMillis() - birthday.getTime() < 0L) {
++            return invalidAge;
++        }
++
++
++        int yearNow = calendar.get(Calendar.YEAR);
++        int monthNow = calendar.get(Calendar.MONTH);
++        int dayOfMonthNow = calendar.get(Calendar.DAY_OF_MONTH);
++
++        calendar.setTime(birthday);
++
++
++        int yearBirthday = calendar.get(Calendar.YEAR);
++        int monthBirthday = calendar.get(Calendar.MONTH);
++        int dayOfMonthBirthday = calendar.get(Calendar.DAY_OF_MONTH);
++
++        int age = yearNow - yearBirthday;
++
++
++        if (monthNow <= monthBirthday && monthNow == monthBirthday && dayOfMonthNow < dayOfMonthBirthday || monthNow < monthBirthday) {
++            age--;
++        }
++
++        return age;
++    }
++
++
++}
+Index: src/main/java/com/lazulite/ai/toolbox/util/DateUtils.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/toolbox/util/DateUtils.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/toolbox/util/DateUtils.java	(date 1574064629000)
+@@ -0,0 +1,84 @@
++package com.lazulite.ai.toolbox.util;
++
++import java.text.ParseException;
++import java.time.Instant;
++import java.time.LocalDateTime;
++import java.time.ZoneId;
++import java.time.ZonedDateTime;
++import java.time.format.DateTimeFormatter;
++import java.util.Date;
++
++/**
++ * Created by Alex on 2017/4/14.
++ */
++public class DateUtils {
++
++    public static Instant stringToInstant(String dateStr,String pattern){
++        if(dateStr==null)return null;
++        try {
++            return org.apache.commons.lang3.time.DateUtils.parseDate(dateStr, pattern).toInstant();
++        } catch (ParseException e) {
++            e.printStackTrace();
++        }
++        return null;
++    }
++
++
++    public static ZonedDateTime toDate(String dateStr){
++        if(dateStr==null)return null;
++        try {
++            return ZonedDateTime.ofInstant(org.apache.commons.lang3.time.DateUtils.parseDate(dateStr, "yyyy-MM-dd").toInstant(), ZoneId.systemDefault());
++        } catch (ParseException e) {
++            e.printStackTrace();
++        }
++        return null;
++    }
++    public static ZonedDateTime toDatetime(String dateStr){
++        if(dateStr==null)return null;
++        try {
++            return ZonedDateTime.ofInstant(org.apache.commons.lang3.time.DateUtils.parseDate(dateStr, "yyyy-MM-dd hh:mm:ss").toInstant(), ZoneId.systemDefault());
++        } catch (ParseException e) {
++            e.printStackTrace();
++        }
++        return null;
++    }
++
++
++    public static ZonedDateTime getZonedDateTimeFromTimestamp(Long timestamp){
++        return ZonedDateTime.ofInstant(Instant.ofEpochSecond(timestamp),ZoneId.systemDefault());
++    }
++
++    public static ZonedDateTime dateToZonedDate(Date date){
++        return ZonedDateTime.ofInstant(date.toInstant(),ZoneId.systemDefault());
++    }
++
++
++
++
++    public static String toString(ZonedDateTime date){
++        return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(date);
++    }
++
++    public static String toStringOfPattern(Instant date,String pattern){
++        return DateTimeFormatter.ofPattern(pattern).format(ZonedDateTime.ofInstant(date,ZoneId.systemDefault()));
++    }
++
++    public static Long toLong(LocalDateTime date){
++        return date.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
++    }
++
++    public static String toMsgDateStringForEnglish(ZonedDateTime date){
++        return DateTimeFormatter.ofPattern("yyyy/MM/dd").format(date);
++    }
++    public static String toMonthAndDay(ZonedDateTime date){
++        return date.getMonthValue()+"."+date.getDayOfMonth();
++    }
++
++    public static Instant jodaToInstant(org.joda.time.Instant jodaInstant){
++        return Instant.ofEpochMilli( jodaInstant.getMillis() ) ;
++    }
++
++    public static org.joda.time.Instant instantToJoda(Instant instant){
++        return org.joda.time.Instant.ofEpochMilli(instant.toEpochMilli());
++    }
++}
+Index: src/main/java/com/lazulite/ai/toolbox/util/RandomUtil.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/toolbox/util/RandomUtil.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/toolbox/util/RandomUtil.java	(date 1574064629000)
+@@ -0,0 +1,41 @@
++package com.lazulite.ai.toolbox.util;
++
++import org.apache.commons.lang3.RandomStringUtils;
++
++/**
++ * Utility class for generating random Strings.
++ */
++public final class RandomUtil {
++
++    private static final int DEF_COUNT = 20;
++
++    private RandomUtil() {
++    }
++
++    /**
++     * Generate a password.
++     *
++     * @return the generated password.
++     */
++    public static String generatePassword() {
++        return RandomStringUtils.randomAlphanumeric(DEF_COUNT);
++    }
++
++    /**
++     * Generate an activation key.
++     *
++     * @return the generated activation key.
++     */
++    public static String generateActivationKey() {
++        return RandomStringUtils.randomNumeric(DEF_COUNT);
++    }
++
++    /**
++     * Generate a reset key.
++     *
++     * @return the generated reset key.
++     */
++    public static String generateResetKey() {
++        return RandomStringUtils.randomNumeric(DEF_COUNT);
++    }
++}
+Index: src/main/java/com/lazulite/ai/toolbox/service/ApiInvokeService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/toolbox/service/ApiInvokeService.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/toolbox/service/ApiInvokeService.java	(date 1574064629000)
+@@ -0,0 +1,191 @@
++package com.lazulite.ai.toolbox.service;
++
++
++import org.apache.http.NameValuePair;
++import org.apache.http.client.ClientProtocolException;
++import org.apache.http.client.config.RequestConfig;
++import org.apache.http.client.entity.UrlEncodedFormEntity;
++import org.apache.http.client.methods.CloseableHttpResponse;
++import org.apache.http.client.methods.HttpGet;
++import org.apache.http.client.methods.HttpPost;
++import org.apache.http.client.utils.URIBuilder;
++import org.apache.http.entity.ContentType;
++import org.apache.http.entity.StringEntity;
++import org.apache.http.impl.client.CloseableHttpClient;
++import org.apache.http.message.BasicNameValuePair;
++import org.apache.http.util.EntityUtils;
++import org.slf4j.Logger;
++import org.slf4j.LoggerFactory;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.stereotype.Service;
++
++import java.io.IOException;
++import java.io.InputStream;
++import java.net.URISyntaxException;
++import java.nio.charset.Charset;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Map;
++
++/**
++ * Created by Alex on 2017/4/10.
++ */
++@Service
++public class ApiInvokeService {
++
++
++    private final Logger log = LoggerFactory.getLogger(ApiInvokeService.class);
++
++
++    @Autowired
++    private CloseableHttpClient httpClient;
++    @Autowired
++    private RequestConfig requestConfig;
++
++
++
++    /**
++     * 执行get请求,200返回响应内容，其他状态码返回null
++     *
++     * @param url
++     * @return
++     * @throws IOException
++     */
++    public String doGet(String url) throws IOException {
++        //创建httpClient对象
++        CloseableHttpResponse response = null;
++        HttpGet httpGet = new HttpGet(url);
++        //设置请求参数
++        httpGet.setConfig(requestConfig);
++        try {
++            //执行请求
++            response = httpClient.execute(httpGet);
++            //判断返回状态码是否为200
++            if (response.getStatusLine().getStatusCode() == 200) {
++                return EntityUtils.toString(response.getEntity(), "UTF-8");
++            }
++        } finally {
++            if (response != null) {
++                response.close();
++            }
++        }
++        return null;
++    }
++
++
++    public InputStream doGetReturnInputStream(String url) throws IOException {
++        //创建httpClient对象
++        CloseableHttpResponse response = null;
++        HttpGet httpGet = new HttpGet(url);
++        //设置请求参数
++        httpGet.setConfig(requestConfig);
++        //执行请求
++        response = httpClient.execute(httpGet);
++        //判断返回状态码是否为200
++        if (response.getStatusLine().getStatusCode() == 200) {
++            InputStream content = response.getEntity().getContent();
++            return content;
++        }
++        return null;
++    }
++
++    /**
++     * 执行带有参数的get请求
++     *
++     * @param url
++     * @param paramMap
++     * @return
++     * @throws IOException
++     * @throws URISyntaxException
++     */
++    public String doGet(String url, Map<String, Object> paramMap) throws IOException, URISyntaxException {
++        URIBuilder builder = new URIBuilder(url);
++        for (String s : paramMap.keySet()) {
++            builder.addParameter(s, paramMap.get(s).toString());
++        }
++        if(log.isDebugEnabled()){
++            log.debug("do Get,url: {}",builder.build().toString());
++        }
++        return doGet(builder.build().toString());
++    }
++
++    /**
++     * 执行post请求
++     *
++     * @param url
++     * @param paramMap
++     * @return
++     * @throws IOException
++     */
++    public HttpResultDTO doPost(String url, Map<String, Object> paramMap) throws IOException {
++        HttpPost httpPost = new HttpPost(url);
++        //设置请求参数
++        httpPost.setConfig(requestConfig);
++        if (paramMap != null) {
++            List<NameValuePair> parameters = new ArrayList<NameValuePair>();
++            for (String s : paramMap.keySet()) {
++                parameters.add(new BasicNameValuePair(s, paramMap.get(s).toString()));
++            }
++            //构建一个form表单式的实体
++            UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(parameters, Charset.forName("UTF-8"));
++            //将请求实体放入到httpPost中
++            httpPost.setEntity(formEntity);
++        }
++        //创建httpClient对象
++        CloseableHttpResponse response = null;
++        try {
++            //执行请求
++            response = httpClient.execute(httpPost);
++            return new HttpResultDTO(response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity()));
++        } finally {
++            if (response != null) {
++                response.close();
++            }
++        }
++    }
++
++    /**
++     * 执行post请求
++     *
++     * @param url
++     * @return
++     * @throws IOException
++     */
++    public HttpResultDTO doPost(String url) throws IOException {
++        return doPost(url, null);
++    }
++
++
++    /**
++     * 提交json数据
++     *
++     * @param url
++     * @param json
++     * @return
++     * @throws ClientProtocolException
++     * @throws IOException
++     */
++    public HttpResultDTO doPostJson(String url, String json) throws ClientProtocolException, IOException {
++        // 创建http POST请求
++        HttpPost httpPost = new HttpPost(url);
++        httpPost.setConfig(this.requestConfig);
++
++        if (json != null) {
++            // 构造一个请求实体
++            StringEntity stringEntity = new StringEntity(json, ContentType.APPLICATION_JSON);
++            // 将请求实体设置到httpPost对象中
++            httpPost.setEntity(stringEntity);
++        }
++        CloseableHttpResponse response = null;
++        try {
++            // 执行请求
++            response = this.httpClient.execute(httpPost);
++            return new HttpResultDTO(response.getStatusLine().getStatusCode(),
++                EntityUtils.toString(response.getEntity(), "UTF-8"));
++        } finally {
++            if (response != null) {
++                response.close();
++            }
++        }
++    }
++}
+Index: src/main/java/com/lazulite/ai/toolbox/service/ApiResultVM.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/toolbox/service/ApiResultVM.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/toolbox/service/ApiResultVM.java	(date 1574064629000)
+@@ -0,0 +1,82 @@
++package com.lazulite.ai.toolbox.service;
++
++import java.io.Serializable;
++
++/**
++ *service层返回对象列表封装
++ * @param <T>
++ */
++public class ApiResultVM<T>  implements Serializable{
++
++    private boolean success = false;
++
++    private String code;
++
++    private String message;
++
++    private T result;
++
++    public ApiResultVM() {
++    }
++
++    public static <T> ApiResultVM<T> success(T result) {
++        ApiResultVM<T> item = new ApiResultVM<T>();
++        item.success = true;
++        item.result = result;
++        item.code = "0";
++        item.message = "success";
++        return item;
++    }
++
++    public static <T> ApiResultVM<T> failure(String errorCode, String errorMessage) {
++        ApiResultVM<T> item = new ApiResultVM<T>();
++        item.success = false;
++        item.code = errorCode;
++        item.message = errorMessage;
++        return item;
++    }
++
++    public static <T> ApiResultVM<T> failure(String errorCode) {
++        ApiResultVM<T> item = new ApiResultVM<T>();
++        item.success = false;
++        item.code = errorCode;
++        item.message = "failure";
++        return item;
++    }
++
++    public boolean hasResult() {
++        return result != null;
++    }
++
++    public boolean isSuccess() {
++        return success;
++    }
++
++    public T getResult() {
++        return result;
++    }
++
++    public String getCode() {
++        return code;
++    }
++
++    public String getMessage() {
++        return message;
++    }
++
++    public void setSuccess(boolean success) {
++        this.success = success;
++    }
++
++    public void setCode(String code) {
++        this.code = code;
++    }
++
++    public void setMessage(String message) {
++        this.message = message;
++    }
++
++    public void setResult(T result) {
++        this.result = result;
++    }
++}
+Index: src/main/java/com/lazulite/ai/toolbox/service/HttpResultDTO.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/lazulite/ai/toolbox/service/HttpResultDTO.java	(date 1574064629000)
++++ src/main/java/com/lazulite/ai/toolbox/service/HttpResultDTO.java	(date 1574064629000)
+@@ -0,0 +1,48 @@
++package com.lazulite.ai.toolbox.service;
++
++import org.springframework.http.HttpStatus;
++
++/**
++ * Created by Alex on 2017/4/10.
++ */
++public class HttpResultDTO {
++    private Integer httpStatus;
++    private String data;
++
++    public HttpResultDTO(Integer httpStatus, String data) {
++        this.httpStatus = httpStatus;
++        this.data = data;
++    }
++
++    public HttpResultDTO() {
++    }
++
++    public Integer getHttpStatus() {
++        return httpStatus;
++    }
++
++    public void setHttpStatus(Integer httpStatus) {
++        this.httpStatus = httpStatus;
++    }
++
++    public String getData() {
++        return data;
++    }
++
++    public void setData(String data) {
++        this.data = data;
++    }
++
++
++    public boolean isOk() {
++        return this.getHttpStatus().equals(HttpStatus.OK.value());
++    }
++
++    @Override
++    public String toString() {
++        return "HttpResultDTO{" +
++            "httpStatus=" + httpStatus +
++            ", data='" + data + '\'' +
++            '}';
++    }
++}
